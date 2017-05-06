@@ -31,3 +31,4 @@
 # Debug files
 *.dSYM/
 *.su
+UART_USART_example/UART_USART_example/Debug/
