@@ -32,3 +32,4 @@
 *.dSYM/
 *.su
 UART_USART_example/UART_USART_example/Debug/
+UART_USART_library/UART_USART_library/Debug/
