@@ -77,5 +77,7 @@ extern void serial_mdw_init(usart_if p_usart,usart_serial_options_t *opt) ;
 
 extern int serial_mdw_putchar(usart_if p_usart, const uint8_t c);
 
+extern void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize);
+
 
 #endif /* SERIAL_MDW_H_ */

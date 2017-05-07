@@ -38,6 +38,11 @@ extern "C" {
  * \retval 0 on success.
  * \retval 1 on failure.
  */
+
+uint8_t arrayString[20];
+uint8_t head=0;
+uint8_t tail=0;
+
 void serial_mdw_init(usart_if p_usart,
 usart_serial_options_t *opt)
 {
@@ -78,6 +83,25 @@ usart_serial_options_t *opt)
 		/* Configure UART */
 		uart_init((Uart*)p_usart, &uart_settings);
 	}
+	else if(USART0 == (Usart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_USART0);
+		/* Configure UART */
+		usart_init_rs232((Usart*)p_usart, &usart_settings,
+		sysclk_get_peripheral_hz());
+	}
+	else if(USART1 == (Usart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_USART1);
+		/* Configure UART */
+		usart_init_rs232((Usart*)p_usart, &usart_settings,
+		sysclk_get_peripheral_hz());
+	}
+	else if(USART2 == (Usart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_USART2);
+		/* Configure UART */
+		usart_init_rs232((Usart*)p_usart, &usart_settings,
+		sysclk_get_peripheral_hz());
+	}
+
 }
 
 /**
@@ -98,6 +122,56 @@ int serial_mdw_putchar(usart_if p_usart, const uint8_t c)
 		return 1;
 	}
 	return 0;
+}
+
+void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize){
+	if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
+		while(ulsize > 0) {
+			if(0 == usart_write((Uart*)p_usart, *p_buff)){
+				uart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
+				ulsize--;
+				p_buff++;
+			}
+		}
+	}
+	else if(USART0 == (Usart*)p_usart || USART1 == (Usart*)p_usart || USART2 == (Usart*)p_usart ){
+		while(ulsize > 0) {
+			if(0 == usart_write((Uart*)p_usart, *p_buff)){
+				usart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
+				ulsize--;
+				p_buff++;
+			}
+		}
+	}
+	
+}
+
+void UART4_Handler(void)
+{
+	uint32_t ul_status;
+	uint8_t uc_char;
+
+	/* Read USART status. */
+	ul_status = uart_get_status(UART4);
+
+	/*transmit interrupt rises*/
+	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
+		
+		uart_disable_interrupt(UART4, (UART_IER_TXRDY | UART_IER_TXEMPTY));
+	}
+}
+void USART0_Handler(void)
+{
+	uint32_t ul_status;
+	uint8_t uc_char;
+
+	/* Read USART status. */
+	ul_status = usart_get_status(USART0);
+
+	/*transmit interrupt rises*/
+	if(ul_status & (US_IER_TXRDY | US_IER_TXEMPTY)) {
+		usart_disable_interrupt(USART0, (US_IER_TXRDY | US_IER_TXEMPTY));
+	}
 }
 
 /// @cond 0

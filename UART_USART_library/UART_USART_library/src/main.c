@@ -47,16 +47,22 @@ static void configure_uart(void)
 
 	/* Configure USART in RS232 mode. */
 	serial_mdw_init(UART4, &usart_console_settings);
+	serial_mdw_init(USART0, &usart_console_settings);
 
 	/* Disable all the interrupts. */
 	usart_disable_interrupt(UART4, 0xffffffff);
+	usart_disable_interrupt(USART0, 0xffffffff);
+
 
 	/* Enable TX & RX function. */
 	usart_enable_tx(UART4);
 	usart_enable_rx(UART4);
+	usart_enable_tx(USART0);
+	usart_enable_rx(USART0);
 
 	/* Configure and enable interrupt of USART. */
 	NVIC_EnableIRQ(UART4_IRQn);
+	NVIC_EnableIRQ(USART0_IRQn);
 }
 
 int main (void)
@@ -70,7 +76,9 @@ int main (void)
 	
 	while (1)
 	{
-		serial_mdw_putchar(UART4, 'h');
+		//serial_mdw_putchar(UART4, 'h');
+		serial_mdw_sendData(UART4, "HELLO WORLD", 11);
+		serial_mdw_sendData(USART0, "WORLD HELLO", 11);
 		delay_ms(50);
 	}
 }
