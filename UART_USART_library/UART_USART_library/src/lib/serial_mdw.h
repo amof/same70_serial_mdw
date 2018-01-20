@@ -65,19 +65,14 @@ typedef usart_rs232_options_t usart_serial_options_t;
 
 typedef Usart *usart_if;
 
-
-/** 
- * \brief Initializes the Usart in master mode.
- *
- * \param p_usart  Base address of the USART instance.
- * \param opt      Options needed to set up RS232 communication (see
- * \ref usart_options_t).
- */
 extern void serial_mdw_init(usart_if p_usart,usart_serial_options_t *opt) ;
 
 extern int serial_mdw_putchar(usart_if p_usart, const uint8_t c);
 
 extern void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize);
 
+//extern uint8_t uart4_available(void);
+
+//extern uint16_t uart4_getc();
 
 #endif /* SERIAL_MDW_H_ */
