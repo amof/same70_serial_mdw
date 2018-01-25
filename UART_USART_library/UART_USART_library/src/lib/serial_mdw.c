@@ -184,13 +184,13 @@ extern "C" {
 	void UART4_Handler(void)
 	{
 		uint8_t uc_char;
-		uint8_t tmphead;
+		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
 
 		/* Read USART status. */
 		ul_status = uart_get_status(UART4);
-
+		
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
 			if ( UART_buffer_pointers[UART4_buffer][UART_TxHead] != UART_buffer_pointers[UART4_buffer][UART_TxTail]) {	
@@ -203,19 +203,20 @@ extern "C" {
 			}
 		}
 		/*receive interrupt rises*/
-		/*if (ul_status & UART_SR_RXRDY) {
+		if (ul_status & UART_SR_RXRDY) {
 			
-			uart_read(UART4, uc_char);
+			tmphead = ( UART_buffer_pointers[UART4_buffer][UART_RxHead] + 1) & 0xFF;
 			
 			if ( tmphead != UART_buffer_pointers[UART4_buffer][UART_RxTail] ) {
+				// store received data in buffer 
+				uart_read(UART4, &uc_char); 
+				UART_RxBuf[UART4_buffer][tmphead] = uc_char;
 				// store new index 
 				UART_buffer_pointers[UART4_buffer][UART_RxHead] = tmphead;
-				// store received data in buffer 
-				UART_RxBuf[UART4_buffer][tmphead] = uc_char;
 			}
 
 			
-		}*/
+		}
 	}
 	
 	void USART0_Handler(void)
@@ -241,31 +242,31 @@ extern "C" {
 		}
 	}
 	
-	/*uint8_t uart4_available(void)
+	uint8_t uart4_available(void)
 	{
-		return (255 + UART_RxHead - UART_RxTail) & 255;
-	}*/
+		return (255 + UART_buffer_pointers[UART4_buffer][UART_RxHead] - UART_buffer_pointers[UART4_buffer][UART_RxTail]) & 0xFF;
+	}
 	
-	/*uint16_t uart4_getc()	
+	uint8_t uart4_getc()	
 	{
 		uint8_t tmptail;
 		uint8_t data;
 		
 		
-		if ( UART_RxHead == UART_RxTail ) {
+		/*if ( UART_buffer_pointers[UART4_buffer][UART_RxHead] == UART_buffer_pointers[UART4_buffer][UART_RxTail] ) {
 			return 0x0100;   // no data available 
-		}
+		}*/
 
 		// calculate store buffer index
-		tmptail = (UART_RxTail + 1) & 255;
-		UART_RxTail = tmptail;
+		tmptail = (UART_buffer_pointers[UART4_buffer][UART_RxTail] + 1) & 0xFF;
+		UART_buffer_pointers[UART4_buffer][UART_RxTail] = tmptail;
 
 		// get data from receive buffer 
-		data = UART_RxBuf[tmptail];
+		data = UART_RxBuf[UART4_buffer][tmptail];
 
 		return data;
 		
-	}*/
+	}
 	
 	
 	/// @cond 0
