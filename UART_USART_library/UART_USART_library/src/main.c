@@ -45,7 +45,6 @@ static void configure_uart(void)
 	
 	/* Initialize UART interfaces. */
 	serial_mdw_init(UART4, &usart_console_settings);
-	serial_mdw_init(USART0, &usart_console_settings);
 	
 	/* Configure and enable interrupt of USART. */
 	NVIC_ClearPendingIRQ(UART4_IRQn);
@@ -64,17 +63,17 @@ int main (void)
 	configure_uart();
 	uint8_t buffer[255];
 	uint8_t i=0;
-	uint8_t test=0;
-	uint8_t array[5] = {'W','O','R','L','D'};
 	
 	while (1)
 	{
-		//serial_mdw_putchar(UART4, 'h');
-		serial_mdw_sendData(UART4, "HELLO WORLD", 11);
-		/*if(uart4_available()>0){
-			test = uart4_getc();
-		}*/
-		//serial_mdw_sendData(USART0, array, 5);
-		delay_ms(50);
+		//serial_mdw_sendData(UART4, "HELLO WORLD", 11);
+		if(serial_mdw_available(UART4)>0){
+			uint8_t received = serial_mdw_readChar(UART4) & 0xFF;
+			buffer[i++] = received;
+			if(i==26){
+				serial_mdw_sendData(UART4, buffer, 26);
+			}
+			
+		}
 	}
 }

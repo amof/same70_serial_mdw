@@ -71,8 +71,8 @@ extern int serial_mdw_putchar(usart_if p_usart, const uint8_t c);
 
 extern void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize);
 
-extern uint8_t uart4_available(void);
+extern uint8_t serial_mdw_available(usart_if p_usart);
 
-extern uint8_t uart4_getc();
+extern uint16_t serial_mdw_readChar(usart_if p_usart);
 
 #endif /* SERIAL_MDW_H_ */

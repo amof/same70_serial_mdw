@@ -36,6 +36,8 @@ extern "C" {
 	static volatile uint8_t UART_buffer_pointers[number_of_uart][number_of_uart_buf_point];
 	static volatile uint8_t UART_RxBuf[number_of_uart][255];
 	static volatile uint8_t UART_TxBuf[number_of_uart][255];
+	
+	uint8_t uart_buffer_from_UART(usart_if p_usart);
 
 	
 	/**
@@ -142,29 +144,12 @@ extern "C" {
 	*
 	* \return None
 	*/
-	void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize){
+	void serial_mdw_sendData(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize){
 		
-		uint8_t uart_buffer = UART0_buffer;
-		uint16_t tmphead;
+		uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+		uint16_t tmphead = 0;
 		
-		if(UART0 == (Uart*)p_usart){
-			uart_buffer = UART0_buffer;
-		}else if(UART1 == (Uart*)p_usart){
-			uart_buffer = UART1_buffer;
-		}else if(UART2 == (Uart*)p_usart){
-			uart_buffer = UART2_buffer;
-		}else if(UART3 == (Uart*)p_usart){
-			uart_buffer = UART3_buffer;
-		}else if(UART4 == (Uart*)p_usart){
-			uart_buffer = UART4_buffer;
-		}else if(USART0 == (Uart*)p_usart){
-			uart_buffer = USART0_buffer;
-		}else if(USART1 == (Uart*)p_usart){
-			uart_buffer = USART1_buffer;
-		}else if(USART2 == (Uart*)p_usart){
-			uart_buffer = USART2_buffer;
-		};
-			
+		
 		for (uint8_t i=0; i<ulsize;i++)
 		{
 			tmphead = (UART_buffer_pointers[uart_buffer][UART_TxHead] + 1) & 0xFF;
@@ -243,32 +228,60 @@ extern "C" {
 		}
 	}
 	
-	uint8_t uart4_available(void)
+	
+	uint8_t serial_mdw_available(usart_if p_usart)
 	{
-		return (255 + UART_buffer_pointers[UART4_buffer][UART_RxHead] - UART_buffer_pointers[UART4_buffer][UART_RxTail]) & 0xFF;
+		uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+		
+		return (255 + UART_buffer_pointers[uart_buffer][UART_RxHead] - UART_buffer_pointers[uart_buffer][UART_RxTail]) % 0xFF;
 	}
 	
-	uint8_t uart4_getc()	
+	uint16_t serial_mdw_readChar(usart_if p_usart)	
 	{
-		uint8_t tmptail;
-		uint8_t data;
+		uint16_t data;
+		uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 		
 		
-		/*if ( UART_buffer_pointers[UART4_buffer][UART_RxHead] == UART_buffer_pointers[UART4_buffer][UART_RxTail] ) {
+		if ( UART_buffer_pointers[uart_buffer][UART_RxHead] == UART_buffer_pointers[uart_buffer][UART_RxTail] ) {
 			return 0x0100;   // no data available 
-		}*/
+		}
 
 		// calculate store buffer index
-		tmptail = (UART_buffer_pointers[UART4_buffer][UART_RxTail] + 1) & 0xFF;
-		UART_buffer_pointers[UART4_buffer][UART_RxTail] = tmptail;
+		uint16_t tmptail = (UART_buffer_pointers[uart_buffer][UART_RxTail] + 1) & 0xFF;
+		UART_buffer_pointers[uart_buffer][UART_RxTail] = tmptail;
 
 		// get data from receive buffer 
-		data = UART_RxBuf[UART4_buffer][tmptail];
+		data = UART_RxBuf[uart_buffer][tmptail];
 
 		return data;
 		
 	}
 	
+	uint8_t uart_buffer_from_UART(usart_if p_usart){
+		
+		uint8_t uart_buffer = UART0_buffer;
+		
+		if(UART0 == (Uart*)p_usart){
+			uart_buffer = UART0_buffer;
+		}else if(UART1 == (Uart*)p_usart){
+			uart_buffer = UART1_buffer;
+		}else if(UART2 == (Uart*)p_usart){
+			uart_buffer = UART2_buffer;
+		}else if(UART3 == (Uart*)p_usart){
+			uart_buffer = UART3_buffer;
+		}else if(UART4 == (Uart*)p_usart){
+			uart_buffer = UART4_buffer;
+		}else if(USART0 == (Uart*)p_usart){
+			uart_buffer = USART0_buffer;
+		}else if(USART1 == (Uart*)p_usart){
+			uart_buffer = USART1_buffer;
+		}else if(USART2 == (Uart*)p_usart){
+			uart_buffer = USART2_buffer;
+		};
+		
+		return uart_buffer;
+				
+	}
 	
 	/// @cond 0
 	/**INDENT-OFF**/
