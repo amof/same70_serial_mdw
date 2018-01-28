@@ -176,6 +176,7 @@ extern "C" {
 			}
 		}
 		
+		uart_enable_tx((Uart*)p_usart);
 		uart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
 		
 	}
@@ -199,11 +200,11 @@ extern "C" {
 				UART_buffer_pointers[UART4_buffer][UART_TxTail] = tmptail;
 			}else{
 				uart_disable_interrupt(UART4, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-
+				uart_disable_tx(UART4);
 			}
 		}
 		/*receive interrupt rises*/
-		if (ul_status & UART_SR_RXRDY) {
+		if (ul_status & UART_SR_RXRDY ) {
 			
 			tmphead = ( UART_buffer_pointers[UART4_buffer][UART_RxHead] + 1) & 0xFF;
 			

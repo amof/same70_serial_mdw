@@ -380,9 +380,14 @@ void board_init(void)
 #ifndef BOARD_ID_USART
 	ioport_set_pin_peripheral_mode(USART0_TXD_GPIO, USART0_TXD_FLAGS); //USART0 TXD0
 	
-	ioport_set_pin_peripheral_mode(PIO_PD19_IDX, IOPORT_MODE_MUX_C); // UTXD4
-	ioport_set_pin_peripheral_mode(PIO_PD18_IDX, IOPORT_MODE_MUX_C); // URXD4
-	ioport_set_pin_level(PIO_PD18_IDX, IOPORT_PIN_LEVEL_HIGH);
+	// Configure TX
+	ioport_set_pin_peripheral_mode(PIO_PD19_IDX, IOPORT_MODE_MUX_C);
+	
+	// Configure RX
+	ioport_set_pin_dir(PIO_PD19_IDX, IOPORT_DIR_INPUT); // Pin in INPUT
+	ioport_set_pin_level(PIO_PD19_IDX, IOPORT_PIN_LEVEL_HIGH); // Pin by default at high level
+	ioport_set_pin_mode(PIO_PD19_IDX, IOPORT_MODE_MUX_C); // Pin is used to do MUX_C -> UART RX
+	
 #endif
 /////////////////////////////////////////
 	

@@ -111,8 +111,8 @@ uint32_t uart_init(Uart *p_uart, const sam_uart_opt_t *p_uart_opt)
 	p_uart->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS;
 #endif
 
-	/* Enable receiver and transmitter */
-	p_uart->UART_CR = UART_CR_RXEN | UART_CR_TXEN;
+	/* Enable receiver, transmitter is set manually */
+	p_uart->UART_CR = UART_CR_RXEN ;
 
 	return 0;
 }

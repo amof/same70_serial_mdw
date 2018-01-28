@@ -31,7 +31,6 @@
 #include <asf.h>
 #include "lib/serial_mdw.h"
 
-
 static void configure_uart(void)
 {
 	const sam_usart_opt_t usart_console_settings = {
@@ -43,26 +42,16 @@ static void configure_uart(void)
 		/* This field is only used in IrDA mode. */
 		0
 	};
-
-
-	/* Configure USART in RS232 mode. */
+	
+	/* Initialize UART interfaces. */
 	serial_mdw_init(UART4, &usart_console_settings);
 	serial_mdw_init(USART0, &usart_console_settings);
-
-	/* Disable all the interrupts. */
-	usart_disable_interrupt(UART4, 0xffffffff);
-	usart_disable_interrupt(USART0, 0xffffffff);
-
-
-	/* Enable TX & RX function. */
-	usart_enable_tx(UART4);
-	usart_enable_rx(UART4);
-	usart_enable_tx(USART0);
-	usart_enable_rx(USART0);
-
+	
 	/* Configure and enable interrupt of USART. */
+	NVIC_ClearPendingIRQ(UART4_IRQn);
 	NVIC_EnableIRQ(UART4_IRQn);
-	NVIC_EnableIRQ(USART0_IRQn);
+	uart_enable_interrupt(UART4, UART_IER_RXRDY);
+	
 }
 
 int main (void)
@@ -73,12 +62,19 @@ int main (void)
 
 	/* Configure USART-USART */
 	configure_uart();
+	uint8_t buffer[255];
+	uint8_t i=0;
+	uint8_t test=0;
+	uint8_t array[5] = {'W','O','R','L','D'};
 	
 	while (1)
 	{
 		//serial_mdw_putchar(UART4, 'h');
 		serial_mdw_sendData(UART4, "HELLO WORLD", 11);
-		serial_mdw_sendData(USART0, "WORLD HELLO", 11);
+		/*if(uart4_available()>0){
+			test = uart4_getc();
+		}*/
+		//serial_mdw_sendData(USART0, array, 5);
 		delay_ms(50);
 	}
 }
