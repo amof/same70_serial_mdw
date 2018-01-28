@@ -72,46 +72,65 @@ extern "C" {
 		
 		if(UART0 == (Uart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_UART0);
-			/* Configure UART */
 			uart_init((Uart*)p_usart, &uart_settings);
+			NVIC_ClearPendingIRQ(UART0_IRQn);
+			NVIC_EnableIRQ(UART0_IRQn);
+			uart_enable_interrupt(UART0, UART_IER_RXRDY);
 		}
 		else if(UART1 == (Uart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_UART1);
-			/* Configure UART */
 			uart_init((Uart*)p_usart, &uart_settings);
+			NVIC_ClearPendingIRQ(UART1_IRQn);
+			NVIC_EnableIRQ(UART1_IRQn);
+			uart_enable_interrupt(UART1, UART_IER_RXRDY);
 		}
 		else if(UART2 == (Uart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_UART2);
-			/* Configure UART */
 			uart_init((Uart*)p_usart, &uart_settings);
+			NVIC_ClearPendingIRQ(UART2_IRQn);
+			NVIC_EnableIRQ(UART2_IRQn);
+			uart_enable_interrupt(UART2, UART_IER_RXRDY);
 		}
 		else if(UART3 == (Uart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_UART3);
-			/* Configure UART */
 			uart_init((Uart*)p_usart, &uart_settings);
+			NVIC_ClearPendingIRQ(UART3_IRQn);
+			NVIC_EnableIRQ(UART3_IRQn);
+			uart_enable_interrupt(UART3, UART_IER_RXRDY);
 		}
 		else if(UART4 == (Uart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_UART4);
-			/* Configure UART */
 			uart_init((Uart*)p_usart, &uart_settings);
+			NVIC_ClearPendingIRQ(UART4_IRQn);
+			NVIC_EnableIRQ(UART4_IRQn);
+			uart_enable_interrupt(UART4, UART_IER_RXRDY);
 		}
 		else if(USART0 == (Usart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_USART0);
-			/* Configure UART */
 			usart_init_rs232((Usart*)p_usart, &usart_settings,
 			sysclk_get_peripheral_hz());
+			usart_enable_rx(USART0);
+			NVIC_ClearPendingIRQ(USART0_IRQn);
+			NVIC_EnableIRQ(USART0_IRQn);
+			usart_enable_interrupt(USART0, UART_IER_RXRDY);
 		}
 		else if(USART1 == (Usart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_USART1);
-			/* Configure UART */
 			usart_init_rs232((Usart*)p_usart, &usart_settings,
 			sysclk_get_peripheral_hz());
+			usart_enable_rx(USART1);
+			NVIC_ClearPendingIRQ(USART1_IRQn);
+			NVIC_EnableIRQ(USART1_IRQn);
+			usart_enable_interrupt(USART1, UART_IER_RXRDY);
 		}
 		else if(USART2 == (Usart*)p_usart){
 			sysclk_enable_peripheral_clock(ID_USART2);
-			/* Configure UART */
 			usart_init_rs232((Usart*)p_usart, &usart_settings,
 			sysclk_get_peripheral_hz());
+			usart_enable_rx(USART2);
+			NVIC_ClearPendingIRQ(USART2_IRQn);
+			NVIC_EnableIRQ(USART2_IRQn);
+			usart_enable_interrupt(USART2, UART_IER_RXRDY);
 		}
 
 	}
@@ -161,9 +180,15 @@ extern "C" {
 			}
 		}
 		
-		uart_enable_tx((Uart*)p_usart);
-		uart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
-		
+		if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
+			uart_enable_tx((Uart*)p_usart);
+			uart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
+		}
+		else if(USART0 == (Usart*)p_usart || USART1 == (Usart*)p_usart || USART2 == (Usart*)p_usart ){
+			usart_enable_tx((Uart*)p_usart);
+			usart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
+		}
+			
 	}
 
 
@@ -209,12 +234,13 @@ extern "C" {
 	{
 		
 		uint8_t uc_char;
+		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
 
 		/* Read USART status. */
 		ul_status = uart_get_status(USART0);
-
+		
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
 			if ( UART_buffer_pointers[USART0_buffer][UART_TxHead] != UART_buffer_pointers[USART0_buffer][UART_TxTail]) {
@@ -222,9 +248,24 @@ extern "C" {
 				usart_write(USART0, UART_TxBuf[USART0_buffer][tmptail]);
 				UART_buffer_pointers[USART0_buffer][UART_TxTail] = tmptail;
 				}else{
-				uart_disable_interrupt(USART0, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-
+				usart_disable_interrupt(USART0, (UART_IER_TXRDY | UART_IER_TXEMPTY));
+				usart_disable_tx(USART0);
 			}
+		}
+		/*receive interrupt rises*/
+		if (ul_status & UART_SR_RXRDY ) {
+			
+			tmphead = ( UART_buffer_pointers[USART0_buffer][UART_RxHead] + 1) & 0xFF;
+			
+			if ( tmphead != UART_buffer_pointers[USART0_buffer][UART_RxTail] ) {
+				// store received data in buffer
+				usart_read(USART0, &uc_char);
+				UART_RxBuf[USART0_buffer][tmphead] = uc_char;
+				// store new index
+				UART_buffer_pointers[USART0_buffer][UART_RxHead] = tmphead;
+			}
+
+			
 		}
 	}
 	

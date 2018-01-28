@@ -91,6 +91,18 @@
 		ioport_set_pin_mode(pin, mode);\
 		ioport_set_pin_sense_mode(pin, sense);\
 	} while (0)
+	
+	// Pin in INPUT
+	// Pin by default at high level
+	// Pin is used to do MUX_C -> UART RX
+#define ioport_set_pin_input_mode_level(pin, mode, level) \
+	do {\
+		ioport_set_pin_dir(pin, IOPORT_DIR_INPUT);\
+		ioport_set_pin_mode(pin, mode);\
+		ioport_set_pin_level(pin, level);\
+	} while (0)
+
+
 
 
 #ifdef CONF_BOARD_CONFIG_MPU_AT_INIT
@@ -378,16 +390,28 @@ void board_init(void)
 /* UART-USART                                                           */
 /************************************************************************/
 #ifndef BOARD_ID_USART
-	ioport_set_pin_peripheral_mode(USART0_TXD_GPIO, USART0_TXD_FLAGS); //USART0 TXD0
 	
 	// Configure TX
-	ioport_set_pin_peripheral_mode(PIO_PD19_IDX, IOPORT_MODE_MUX_C);
-	
+	ioport_set_pin_peripheral_mode(UART0_TXD_GPIO, UART0_TXD_FLAGS);	// UART0 UTXD0
+	ioport_set_pin_peripheral_mode(UART1_TXD_GPIO, UART1_TXD_FLAGS);	// UART1 UTXD1
+	ioport_set_pin_peripheral_mode(UART2_TXD_GPIO, UART2_TXD_FLAGS);	// UART2 UTXD2
+	ioport_set_pin_peripheral_mode(UART3_TXD_GPIO, UART3_TXD_FLAGS);	// UART3 UTXD3
+	ioport_set_pin_peripheral_mode(UART4_TXD_GPIO, UART4_TXD_FLAGS);	// UART4 UTXD4
+	ioport_set_pin_peripheral_mode(USART0_TXD_GPIO, USART0_TXD_FLAGS);	// USART0 TXD0
+	ioport_set_pin_peripheral_mode(USART1_TXD_GPIO, USART1_TXD_FLAGS);	// USART1 TXD1
+	ioport_set_pin_peripheral_mode(USART2_TXD_GPIO, USART2_TXD_FLAGS);	// USART2 TXD2
+
 	// Configure RX
-	ioport_set_pin_dir(PIO_PD19_IDX, IOPORT_DIR_INPUT); // Pin in INPUT
-	ioport_set_pin_level(PIO_PD19_IDX, IOPORT_PIN_LEVEL_HIGH); // Pin by default at high level
-	ioport_set_pin_mode(PIO_PD19_IDX, IOPORT_MODE_MUX_C); // Pin is used to do MUX_C -> UART RX
-	
+	// Not configured, by default HIGH LEVEL
+	// With the code below, default level is LOW LEVEL, doesn't know why
+	/*ioport_set_pin_input_mode_level(UART0_RXD_GPIO, UART0_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART0 URXD0
+	ioport_set_pin_input_mode_level(UART1_RXD_GPIO, UART1_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART1 URXD1
+	ioport_set_pin_input_mode_level(UART2_RXD_GPIO, UART2_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART2 URXD2
+	ioport_set_pin_input_mode_level(UART3_RXD_GPIO, UART3_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART3 URXD3
+	ioport_set_pin_input_mode_level(UART4_RXD_GPIO, UART4_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART4 URXD4
+	ioport_set_pin_input_mode_level(USART0_RXD_GPIO, USART0_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // USART0 RXD0
+	ioport_set_pin_input_mode_level(USART1_RXD_GPIO, USART1_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // USART1 RXD1
+	ioport_set_pin_input_mode_level(USART2_RXD_GPIO, USART2_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // USART2 RXD2*/
 #endif
 /////////////////////////////////////////
 	
@@ -506,32 +530,6 @@ void board_init(void)
 #ifdef CONF_BOARD_PWM_LED1
 	/* Configure PWM LED1 pin */
 	ioport_set_pin_peripheral_mode(PIN_PWM_LED1_GPIO, PIN_PWM_LED1_FLAGS);
-#endif
-
-
-#ifdef CONF_BOARD_USART_RXD
-	/* Configure USART RXD pin */
-	ioport_set_pin_peripheral_mode(USART0_RXD_GPIO, USART0_RXD_FLAGS);
-#endif
-
-#ifdef CONF_BOARD_USART_TXD
-	/* Configure USART TXD pin */
-	ioport_set_pin_peripheral_mode(USART0_TXD_GPIO, USART0_TXD_FLAGS);
-#endif
-
-#ifdef CONF_BOARD_USART_SCK
-	/* Configure USART synchronous communication SCK pin */
-	ioport_set_pin_peripheral_mode(PIN_USART0_SCK_IDX,PIN_USART0_SCK_FLAGS);
-#endif
-
-#ifdef CONF_BOARD_USART_CTS
-	/* Configure USART synchronous communication CTS pin */
-	ioport_set_pin_peripheral_mode(PIN_USART0_CTS_IDX,PIN_USART0_CTS_FLAGS);
-#endif
-
-#ifdef CONF_BOARD_USART_RTS
-	/* Configure USART RTS pin */
-	ioport_set_pin_peripheral_mode(PIN_USART0_RTS_IDX, PIN_USART0_RTS_FLAGS);
 #endif
 
 #ifdef CONF_BOARD_SD_MMC_HSMCI
