@@ -499,8 +499,8 @@ extern "C" {
 	uint8_t serial_mdw_available(usart_if p_usart)
 	{
 		uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
-		
-		return (255 + UART_buffer_pointers[uart_buffer][UART_RxHead] - UART_buffer_pointers[uart_buffer][UART_RxTail]) & 0xFF;
+		uint16_t temp = 256 + UART_buffer_pointers[uart_buffer][UART_RxHead] - UART_buffer_pointers[uart_buffer][UART_RxTail];
+		return (uint8_t) (temp & 0xFF);
 	}
 	
 	uint16_t serial_mdw_readChar(usart_if p_usart)	
