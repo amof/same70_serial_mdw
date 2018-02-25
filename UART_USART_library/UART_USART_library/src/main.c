@@ -31,6 +31,8 @@
 #include <asf.h>
 #include "lib/serial_mdw.h"
 
+uint8_t i=0;
+
 static void configure_uart(void)
 {
 	const sam_usart_opt_t usart_console_settings = {
@@ -44,8 +46,14 @@ static void configure_uart(void)
 	};
 	
 	/* Initialize UART interfaces. */
+	serial_mdw_init(UART0, &usart_console_settings);
+	serial_mdw_init(UART1, &usart_console_settings);
+	serial_mdw_init(UART2, &usart_console_settings);
+	serial_mdw_init(UART3, &usart_console_settings);
 	serial_mdw_init(UART4, &usart_console_settings);
 	serial_mdw_init(USART0, &usart_console_settings);
+	serial_mdw_init(USART1, &usart_console_settings);
+	serial_mdw_init(USART2, &usart_console_settings);
 	
 }
 
@@ -58,16 +66,35 @@ int main (void)
 	/* Configure USART-USART */
 	configure_uart();
 	uint8_t buffer[255];
-	uint8_t i=0;
+	
 	uint8_t buffer2[255];
 	uint8_t j=0;
 	
 	while (1)
 	{
-		/*serial_mdw_sendData(UART4, "HELLO WORLD", 11);
-		serial_mdw_sendData(USART0, "WORLD HELLO", 11);
-		delay_ms(50);*/
+		// Transmission test
+		// All tx are functionnal
+		serial_mdw_sendData(UART0, "WORLD HELLO", 11); 
+		serial_mdw_sendData(UART1, "WORLD HELLO", 11); 
+		serial_mdw_sendData(UART2, "WORLD HELLO", 11); 
+		serial_mdw_sendData(UART3, "WORLD HELLO", 11); 
+		serial_mdw_sendData(UART4, "HELLO WORLD", 11); 
+		serial_mdw_sendData(USART0, "WORLD HELLO", 11); 
+		serial_mdw_sendData(USART1, "WORLD HELLO", 11); 
+		serial_mdw_sendData(USART2, "WORLD HELLO", 11); 
+		delay_ms(50);
 		
+		/*
+		if(serial_mdw_available(UART1)>0){
+			uint8_t received = serial_mdw_readChar(UART1) & 0xFF;
+			buffer[i++] = received;
+			if(i==26){
+				i=0;
+				serial_mdw_sendData(UART1, buffer, 26);
+			}
+			
+		}
+		/*
 		if(serial_mdw_available(UART4)>0){
 			uint8_t received = serial_mdw_readChar(UART4) & 0xFF;
 			buffer[i++] = received;
@@ -83,7 +110,7 @@ int main (void)
 				serial_mdw_sendData(USART0, buffer, 26);
 			}
 			
-		}
+		}*/
 
 	}
 }

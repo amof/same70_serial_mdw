@@ -399,11 +399,15 @@ void board_init(void)
 	ioport_set_pin_peripheral_mode(UART4_TXD_GPIO, UART4_TXD_FLAGS);	// UART4 UTXD4
 	ioport_set_pin_peripheral_mode(USART0_TXD_GPIO, USART0_TXD_FLAGS);	// USART0 TXD0
 	ioport_set_pin_peripheral_mode(USART1_TXD_GPIO, USART1_TXD_FLAGS);	// USART1 TXD1
+	MATRIX->CCFG_SYSIO |= CCFG_SYSIO_SYSIO4; // Added to configure USART1
 	ioport_set_pin_peripheral_mode(USART2_TXD_GPIO, USART2_TXD_FLAGS);	// USART2 TXD2
+	
 
 	// Configure RX
 	// Not configured, by default HIGH LEVEL
 	// With the code below, default level is LOW LEVEL, doesn't know why
+	//pio_set_input(UART0_RXD_GPIO, UART0_RXD_FLAGS, PIO_PULLUP);
+	//pio_set_peripheral(PIN_GMAC_PIO, UART0_RXD_FLAGS, PIN_GMAC_MASK);
 	/*ioport_set_pin_input_mode_level(UART0_RXD_GPIO, UART0_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART0 URXD0
 	ioport_set_pin_input_mode_level(UART1_RXD_GPIO, UART1_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART1 URXD1
 	ioport_set_pin_input_mode_level(UART2_RXD_GPIO, UART2_RXD_FLAGS, IOPORT_PIN_LEVEL_HIGH); // UART2 URXD2
@@ -467,13 +471,6 @@ void board_init(void)
 	/* Configure Push Button pins */
 	ioport_set_pin_input_mode(GPIO_PUSH_BUTTON_1, GPIO_PUSH_BUTTON_1_FLAGS,
 			GPIO_PUSH_BUTTON_1_SENSE);
-
-#ifdef CONF_BOARD_UART_CONSOLE
-	/* Configure UART pins */
-	ioport_set_pin_peripheral_mode(USART1_RXD_GPIO, USART1_RXD_FLAGS);
-	MATRIX->CCFG_SYSIO |= CCFG_SYSIO_SYSIO4;
-	ioport_set_pin_peripheral_mode(USART1_TXD_GPIO, USART1_TXD_FLAGS);
-#endif
 
 #ifdef CONF_BOARD_TWIHS0
 	ioport_set_pin_peripheral_mode(TWIHS0_DATA_GPIO, TWIHS0_DATA_FLAGS);

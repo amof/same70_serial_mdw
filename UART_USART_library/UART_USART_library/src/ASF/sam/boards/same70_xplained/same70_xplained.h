@@ -92,8 +92,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#define CONSOLE_UART               USART1
-#define CONSOLE_UART_ID            ID_USART1
 /** USART1 pins definitions, PA21,PB4. */
 #define USART1_RXD_GPIO   PIO_PA21_IDX
 #define USART1_RXD_FLAGS  IOPORT_MODE_MUX_A
