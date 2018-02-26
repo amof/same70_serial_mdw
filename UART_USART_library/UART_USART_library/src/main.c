@@ -83,6 +83,7 @@ int main (void)
 // 		delay_ms(50);
 		
 		// 2. Reception test
+		// A. All UART are OK
 		if(serial_mdw_available(UART0)>0){
 			uint8_t received = serial_mdw_readChar(UART0) & 0xFF;
 			uint8_t point_temp = pointers[0];
@@ -90,48 +91,49 @@ int main (void)
 			pointers[0] = point_temp + 1;
 			if(point_temp==25){
 				serial_mdw_sendData(UART0, buffer[0], 26);
-				pointers[0]=0;
+				pointers[0] = 0;
 			}
-			
-			
 		}
-		/*if(serial_mdw_available(UART1)>0){
+		if(serial_mdw_available(UART1)>0){
 			uint8_t received = serial_mdw_readChar(UART1) & 0xFF;
-			buffer[i++] = received;
-			if(i==26){
-				serial_mdw_sendData(UART1, buffer, 26);
-				i=0;
+			uint8_t point_temp = pointers[1];
+			buffer[1][point_temp] = received;
+			pointers[1] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(UART1, buffer[1], 26);
+				pointers[1]=0;
 			}
-			
 		}
 		if(serial_mdw_available(UART2)>0){
 			uint8_t received = serial_mdw_readChar(UART2) & 0xFF;
-			buffer[i++] = received;
-			if(i==26){
-				serial_mdw_sendData(UART2, buffer, 26);
-				i=0;
+			uint8_t point_temp = pointers[2];
+			buffer[2][point_temp] = received;
+			pointers[2] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(UART2, buffer[2], 26);
+				pointers[2]=0;
 			}
-			
-		}*/
-		/*
+		}
+		if(serial_mdw_available(UART3)>0){
+			uint8_t received = serial_mdw_readChar(UART3) & 0xFF;
+			uint8_t point_temp = pointers[3];
+			buffer[3][point_temp] = received;
+			pointers[3] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(UART3, buffer[3], 26);
+				pointers[3]=0;
+			}
+		}
 		if(serial_mdw_available(UART4)>0){
 			uint8_t received = serial_mdw_readChar(UART4) & 0xFF;
-			buffer[i++] = received;
-			if(i==26){
-				serial_mdw_sendData(UART4, buffer, 26);
-				i=0;
+			uint8_t point_temp = pointers[4];
+			buffer[4][point_temp] = received;
+			pointers[4] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(UART4, buffer[4], 26);
+				pointers[4]=0;
 			}
-			
 		}
-		if(serial_mdw_available(USART0)>0){
-			uint8_t received = serial_mdw_readChar(USART0) & 0xFF;
-			buffer[j++] = received;
-			if(j==26){
-				serial_mdw_sendData(USART0, buffer, 26);
-				i=0;
-			}
-			
-		}*/
 
 	}
 }
