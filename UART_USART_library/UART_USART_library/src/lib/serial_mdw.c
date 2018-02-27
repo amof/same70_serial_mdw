@@ -39,98 +39,89 @@ extern "C" {
 	
 	uint8_t uart_buffer_from_UART(usart_if p_usart);
 
+void serial_mdw_init(usart_if p_usart,
+usart_serial_options_t *opt)
+{
+	sam_uart_opt_t uart_settings;
+	uart_settings.ul_mck = sysclk_get_peripheral_hz();
+	uart_settings.ul_baudrate = opt->baudrate;
+	uart_settings.ul_mode = opt->paritytype;
+
+	sam_usart_opt_t usart_settings;
+	usart_settings.baudrate = opt->baudrate;
+	usart_settings.char_length = opt->charlength;
+	usart_settings.parity_type = opt->paritytype;
+	usart_settings.stop_bits= opt->stopbits;
+	usart_settings.channel_mode= US_MR_CHMODE_NORMAL;
 	
-	/**
-	* \brief Initialize the serial mdw.
-	*
-	* \param p_usart	Base address of the USART instance.
-	* \param *opt		Options for the configuration of the UART instance.
-	*
-	* \return None
-	*/
-	void serial_mdw_init(usart_if p_usart,
-	usart_serial_options_t *opt)
-	{
-		sam_uart_opt_t uart_settings;
-		uart_settings.ul_mck = sysclk_get_peripheral_hz();
-		uart_settings.ul_baudrate = opt->baudrate;
-		uart_settings.ul_mode = opt->paritytype;
-
-		sam_usart_opt_t usart_settings;
-		usart_settings.baudrate = opt->baudrate;
-		usart_settings.char_length = opt->charlength;
-		usart_settings.parity_type = opt->paritytype;
-		usart_settings.stop_bits= opt->stopbits;
-		usart_settings.channel_mode= US_MR_CHMODE_NORMAL;
-		
-		for(uint8_t i=0;i<number_of_uart;i++){
-			for (uint8_t j=0;j<number_of_uart_buf_point;j++)
-			{
-				UART_buffer_pointers[i][j] = 0;
-			}
+	for(uint8_t i=0;i<number_of_uart;i++){
+		for (uint8_t j=0;j<number_of_uart_buf_point;j++)
+		{
+			UART_buffer_pointers[i][j] = 0;
 		}
-		
-		if(UART0 == (Uart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_UART0);
-			uart_init((Uart*)p_usart, &uart_settings);
-			NVIC_ClearPendingIRQ(UART0_IRQn);
-			NVIC_EnableIRQ(UART0_IRQn);
-			uart_enable_interrupt(UART0, UART_IER_RXRDY);
-		}
-		else if(UART1 == (Uart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_UART1);
-			uart_init((Uart*)p_usart, &uart_settings);
-			NVIC_ClearPendingIRQ(UART1_IRQn);
-			NVIC_EnableIRQ(UART1_IRQn);
-			uart_enable_interrupt(UART1, UART_IER_RXRDY);
-		}
-		else if(UART2 == (Uart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_UART2);
-			uart_init((Uart*)p_usart, &uart_settings);
-			NVIC_ClearPendingIRQ(UART2_IRQn);
-			NVIC_EnableIRQ(UART2_IRQn);
-			uart_enable_interrupt(UART2, UART_IER_RXRDY);
-		}
-		else if(UART3 == (Uart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_UART3);
-			uart_init((Uart*)p_usart, &uart_settings);
-			NVIC_ClearPendingIRQ(UART3_IRQn);
-			NVIC_EnableIRQ(UART3_IRQn);
-			uart_enable_interrupt(UART3, UART_IER_RXRDY);
-		}
-		else if(UART4 == (Uart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_UART4);
-			uart_init((Uart*)p_usart, &uart_settings);
-			NVIC_ClearPendingIRQ(UART4_IRQn);
-			NVIC_EnableIRQ(UART4_IRQn);
-			uart_enable_interrupt(UART4, UART_IER_RXRDY);
-		}
-		else if(USART0 == (Usart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_USART0);
-			usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
-			usart_enable_rx(USART0);
-			NVIC_ClearPendingIRQ(USART0_IRQn);
-			NVIC_EnableIRQ(USART0_IRQn);
-			usart_enable_interrupt(USART0, UART_IER_RXRDY);
-		}
-		else if(USART1 == (Usart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_USART1);
-			usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
-			usart_enable_rx(USART1);
-			NVIC_ClearPendingIRQ(USART1_IRQn);
-			NVIC_EnableIRQ(USART1_IRQn);
-			usart_enable_interrupt(USART1, UART_IER_RXRDY);
-		}
-		else if(USART2 == (Usart*)p_usart){
-			sysclk_enable_peripheral_clock(ID_USART2);
-			usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
-			usart_enable_rx(USART2);
-			NVIC_ClearPendingIRQ(USART2_IRQn);
-			NVIC_EnableIRQ(USART2_IRQn);
-			usart_enable_interrupt(USART2, UART_IER_RXRDY);
-		}
-
 	}
+	
+	if(UART0 == (Uart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_UART0);
+		uart_init((Uart*)p_usart, &uart_settings);
+		NVIC_ClearPendingIRQ(UART0_IRQn);
+		NVIC_EnableIRQ(UART0_IRQn);
+		uart_enable_interrupt(UART0, UART_IER_RXRDY);
+	}
+	else if(UART1 == (Uart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_UART1);
+		uart_init((Uart*)p_usart, &uart_settings);
+		NVIC_ClearPendingIRQ(UART1_IRQn);
+		NVIC_EnableIRQ(UART1_IRQn);
+		uart_enable_interrupt(UART1, UART_IER_RXRDY);
+	}
+	else if(UART2 == (Uart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_UART2);
+		uart_init((Uart*)p_usart, &uart_settings);
+		NVIC_ClearPendingIRQ(UART2_IRQn);
+		NVIC_EnableIRQ(UART2_IRQn);
+		uart_enable_interrupt(UART2, UART_IER_RXRDY);
+	}
+	else if(UART3 == (Uart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_UART3);
+		uart_init((Uart*)p_usart, &uart_settings);
+		NVIC_ClearPendingIRQ(UART3_IRQn);
+		NVIC_EnableIRQ(UART3_IRQn);
+		uart_enable_interrupt(UART3, UART_IER_RXRDY);
+	}
+	else if(UART4 == (Uart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_UART4);
+		uart_init((Uart*)p_usart, &uart_settings);
+		NVIC_ClearPendingIRQ(UART4_IRQn);
+		NVIC_EnableIRQ(UART4_IRQn);
+		uart_enable_interrupt(UART4, UART_IER_RXRDY);
+	}
+	else if(USART0 == (Usart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_USART0);
+		usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
+		usart_enable_rx(USART0);
+		NVIC_ClearPendingIRQ(USART0_IRQn);
+		NVIC_EnableIRQ(USART0_IRQn);
+		usart_enable_interrupt(USART0, UART_IER_RXRDY);
+	}
+	else if(USART1 == (Usart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_USART1);
+		usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
+		usart_enable_rx(USART1);
+		NVIC_ClearPendingIRQ(USART1_IRQn);
+		NVIC_EnableIRQ(USART1_IRQn);
+		usart_enable_interrupt(USART1, UART_IER_RXRDY);
+	}
+	else if(USART2 == (Usart*)p_usart){
+		sysclk_enable_peripheral_clock(ID_USART2);
+		usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
+		usart_enable_rx(USART2);
+		NVIC_ClearPendingIRQ(USART2_IRQn);
+		NVIC_EnableIRQ(USART2_IRQn);
+		usart_enable_interrupt(USART2, UART_IER_RXRDY);
+	}
+
+}
 
 	/**
 	* \brief Sends a character with the USART.
@@ -190,7 +181,7 @@ extern "C" {
 	
 	void UART0_Handler(void)
 	{
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
@@ -228,7 +219,7 @@ extern "C" {
 	
 	void UART1_Handler(void)
 	{
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
@@ -266,7 +257,7 @@ extern "C" {
 	
 	void UART2_Handler(void)
 	{
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
@@ -304,7 +295,7 @@ extern "C" {
 	
 	void UART3_Handler(void)
 	{
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
@@ -342,7 +333,7 @@ extern "C" {
 	
 	void UART4_Handler(void)
 	{
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
@@ -362,7 +353,7 @@ extern "C" {
 			}
 		}
 		/*receive interrupt rises*/
-		if (ul_status & UART_SR_RXRDY ) {
+		if (ul_status & US_CSR_RXRDY ) {
 			
 			tmphead = ( UART_buffer_pointers[UART4_buffer][UART_RxHead] + 1) & 0xFF;
 			
@@ -381,15 +372,16 @@ extern "C" {
 	void USART0_Handler(void)
 	{
 		
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
 
 		/* Read USART status. */
-		ul_status = uart_get_status(USART0);
+		ul_status = usart_get_status(USART0);
 		
 		/*transmit interrupt rises*/
+		// TODO rename according to USART instead of UART
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
 			if ( UART_buffer_pointers[USART0_buffer][UART_TxHead] != UART_buffer_pointers[USART0_buffer][UART_TxTail]) {
 				tmptail = (UART_buffer_pointers[USART0_buffer][UART_TxTail] + 1) & 0xFF;
@@ -401,7 +393,7 @@ extern "C" {
 			}
 		}
 		/*receive interrupt rises*/
-		if (ul_status & UART_SR_RXRDY ) {
+		if (ul_status & US_CSR_RXRDY ) {
 			
 			tmphead = ( UART_buffer_pointers[USART0_buffer][UART_RxHead] + 1) & 0xFF;
 			
@@ -420,13 +412,13 @@ extern "C" {
 	void USART1_Handler(void)
 	{
 			
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
 
 		/* Read USART status. */
-		ul_status = uart_get_status(USART1);
+		ul_status = usart_get_status(USART1);
 			
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
@@ -440,7 +432,7 @@ extern "C" {
 			}
 		}
 		/*receive interrupt rises*/
-		if (ul_status & UART_SR_RXRDY ) {
+		if (ul_status & US_CSR_RXRDY ) {
 				
 			tmphead = ( UART_buffer_pointers[USART1_buffer][UART_RxHead] + 1) & 0xFF;
 				
@@ -459,13 +451,13 @@ extern "C" {
 	void USART2_Handler(void)
 	{
 				
-		uint8_t uc_char;
+		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
 		uint32_t ul_status;
 
 		/* Read USART status. */
-		ul_status = uart_get_status(USART2);
+		ul_status = usart_get_status(USART2);
 				
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
@@ -479,21 +471,21 @@ extern "C" {
 			}
 		}
 		/*receive interrupt rises*/
-		if (ul_status & UART_SR_RXRDY ) {
+		if (ul_status & US_CSR_RXRDY ) {
 					
 			tmphead = ( UART_buffer_pointers[USART2_buffer][UART_RxHead] + 1) & 0xFF;
 					
 			if ( tmphead != UART_buffer_pointers[USART2_buffer][UART_RxTail] ) {
 				// store received data in buffer
 				usart_read(USART2, &uc_char);
-				UART_RxBuf[USART2_buffer][tmphead] = uc_char;
+				UART_RxBuf[USART2_buffer][tmphead] = uc_char; 
 				// store new index
 				UART_buffer_pointers[USART2_buffer][UART_RxHead] = tmphead;
 			}
 
 					
 		}
-	}
+	}	
 	
 	
 	uint8_t serial_mdw_available(usart_if p_usart)

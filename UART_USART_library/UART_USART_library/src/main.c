@@ -53,8 +53,7 @@ static void configure_uart(void)
 	serial_mdw_init(UART4, &usart_console_settings);
 	serial_mdw_init(USART0, &usart_console_settings);
 	serial_mdw_init(USART1, &usart_console_settings);
-	serial_mdw_init(USART2, &usart_console_settings);
-	
+	serial_mdw_init(USART2, &usart_console_settings);	
 }
 
 int main (void)
@@ -83,8 +82,8 @@ int main (void)
 // 		delay_ms(50);
 		
 		// 2. Reception test
-		// A. All UART are OK
-		if(serial_mdw_available(UART0)>0){
+		// A. All UART and USART are OK
+		if(serial_mdw_available(UART0)>0){ //ok
 			uint8_t received = serial_mdw_readChar(UART0) & 0xFF;
 			uint8_t point_temp = pointers[0];
 			buffer[0][point_temp] = received;
@@ -94,7 +93,7 @@ int main (void)
 				pointers[0] = 0;
 			}
 		}
-		if(serial_mdw_available(UART1)>0){
+		if(serial_mdw_available(UART1)>0){ //ok
 			uint8_t received = serial_mdw_readChar(UART1) & 0xFF;
 			uint8_t point_temp = pointers[1];
 			buffer[1][point_temp] = received;
@@ -104,7 +103,7 @@ int main (void)
 				pointers[1]=0;
 			}
 		}
-		if(serial_mdw_available(UART2)>0){
+		if(serial_mdw_available(UART2)>0){ //ok
 			uint8_t received = serial_mdw_readChar(UART2) & 0xFF;
 			uint8_t point_temp = pointers[2];
 			buffer[2][point_temp] = received;
@@ -114,7 +113,7 @@ int main (void)
 				pointers[2]=0;
 			}
 		}
-		if(serial_mdw_available(UART3)>0){
+		if(serial_mdw_available(UART3)>0){ //ok
 			uint8_t received = serial_mdw_readChar(UART3) & 0xFF;
 			uint8_t point_temp = pointers[3];
 			buffer[3][point_temp] = received;
@@ -124,7 +123,7 @@ int main (void)
 				pointers[3]=0;
 			}
 		}
-		if(serial_mdw_available(UART4)>0){
+		if(serial_mdw_available(UART4)>0){ //ok
 			uint8_t received = serial_mdw_readChar(UART4) & 0xFF;
 			uint8_t point_temp = pointers[4];
 			buffer[4][point_temp] = received;
@@ -132,6 +131,37 @@ int main (void)
 			if(point_temp==25){
 				serial_mdw_sendData(UART4, buffer[4], 26);
 				pointers[4]=0;
+			}
+		}
+		if(serial_mdw_available(USART0)>0){ //ok
+			uint8_t received = serial_mdw_readChar(USART0) & 0xFF;
+			uint8_t point_temp = pointers[5];
+			buffer[5][point_temp] = received;
+			pointers[5] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(USART0, buffer[5], 26);
+				pointers[5]=0;
+			}
+		}
+		if(serial_mdw_available(USART1)>0){ //ok
+			uint8_t received = serial_mdw_readChar(USART1) & 0xFF;
+			uint8_t point_temp = pointers[6];
+			buffer[6][point_temp] = received;
+			pointers[6] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(USART1, buffer[6], 26);
+				pointers[6]=0;
+			}
+		}
+		
+		if(serial_mdw_available(USART2)>0){ //ok
+			uint8_t received = serial_mdw_readChar(USART2) & 0xFF;
+			uint8_t point_temp = pointers[7];
+			buffer[7][point_temp] = received;
+			pointers[7] = point_temp + 1;
+			if(point_temp==25){
+				serial_mdw_sendData(USART2, buffer[7], 26);
+				pointers[7]=0;
 			}
 		}
 

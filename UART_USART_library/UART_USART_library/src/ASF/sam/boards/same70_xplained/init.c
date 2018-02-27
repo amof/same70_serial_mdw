@@ -384,7 +384,7 @@ static inline void tcm_disable(void)
 
 void board_init(void)
 {
-	
+
 #ifndef CONF_BOARD_KEEP_WATCHDOG_AT_INIT
 	/* Disable the watchdog */
 	WDT->WDT_MR = WDT_MR_WDDIS;
@@ -459,10 +459,9 @@ void board_init(void)
 	ioport_set_pin_peripheral_mode(UART2_RXD_GPIO, UART2_RXD_FLAGS);
 	ioport_set_pin_peripheral_mode(UART3_RXD_GPIO, UART3_RXD_FLAGS);
 	ioport_set_pin_peripheral_mode(UART4_RXD_GPIO, UART4_RXD_FLAGS);
-	// TODO : problems with UART0
-	//ioport_set_pin_peripheral_mode(USART0_RXD_GPIO, USART0_RXD_FLAGS);
-	//ioport_set_pin_peripheral_mode(USART1_RXD_GPIO, USART1_RXD_FLAGS); 
-	//ioport_set_pin_peripheral_mode(USART2_RXD_GPIO, USART2_RXD_FLAGS); 
+	ioport_set_pin_peripheral_mode(USART0_RXD_GPIO, USART0_RXD_FLAGS);
+	ioport_set_pin_peripheral_mode(USART1_RXD_GPIO, USART1_RXD_FLAGS); 
+	ioport_set_pin_peripheral_mode(USART2_RXD_GPIO, USART2_RXD_FLAGS); 
 
 /////////////////////////////////////////
 
