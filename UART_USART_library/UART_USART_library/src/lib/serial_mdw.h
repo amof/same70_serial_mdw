@@ -33,6 +33,7 @@ LICENSE:
  */
 
 
+
 #ifndef SERIAL_MDW_H_
 #define SERIAL_MDW_H_
 
@@ -41,29 +42,34 @@ LICENSE:
 #include "uart.h"
 #include "usart.h"
 #include "status_codes.h"
+#include "uart_serial.h"
+#include "stdio_serial.h"
 
-/** Input parameters when initializing RS232 and similar modes. */
-typedef struct uart_rs232_options {
-	/** Set baud rate of the USART (unused in slave modes). */
-	uint32_t baudrate;
+/*
+   ---------------------------------------
+   ---------- Debugging options ----------
+   ---------------------------------------
+*/
 
-	/** Number of bits to transmit as a character (5-bit to 9-bit). */
-	uint32_t charlength;
+#define SRL_MDW_DEBUG
 
-	/**
-	 * Parity type: USART_PMODE_DISABLED_gc, USART_PMODE_EVEN_gc,
-	 * USART_PMODE_ODD_gc.
-	 */
-	uint32_t paritytype;
+/* Debug facilities. SRL_MDW_DEBUG must be defined to read output */
+#ifdef SRL_MDW_DEBUG
+#define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {printf("%s\r\n",x);}
+#define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {printf("Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); while(1);}
+#define SRL_MDW_DEBUGF(message) SRL_MDW_DEBUG_PLATFORM_DIAG(message)
+#else
+#define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {;}
+#define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {while (1);}
+#define SRL_MDW_DEBUGF(message)
+#endif
 
-	/** 1, 1.5 or 2 stop bits. */
-	uint32_t stopbits;
 
-} usart_rs232_options_t;
-
-typedef usart_rs232_options_t usart_serial_options_t;
-
-typedef Usart *usart_if;
+/*
+   ---------------------------------------
+   -------------- Functions --------------
+   ---------------------------------------
+*/
 
 extern void serial_mdw_init(usart_if p_usart,usart_serial_options_t *opt) ;
 

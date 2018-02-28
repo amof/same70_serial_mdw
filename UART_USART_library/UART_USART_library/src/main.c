@@ -31,7 +31,22 @@
 #include <asf.h>
 #include "lib/serial_mdw.h"
 
-uint8_t i=0;
+/**
+ *  Configure UART for debug message output.
+ */
+static void configure_console(void)
+{
+	const usart_serial_options_t uart_serial_option = {
+		.baudrate = 115200ul,
+		.charlength = US_MR_CHRL_8_BIT,
+		.paritytype = US_MR_PAR_NO,
+		.stopbits = US_MR_NBSTOP_1_BIT
+	};
+
+	/* Configure console UART. */
+	sysclk_enable_peripheral_clock(ID_USART1);
+	stdio_serial_init(USART1, &uart_serial_option);
+}
 
 static void configure_uart(void)
 {
@@ -61,9 +76,17 @@ int main (void)
 	/* Initialize the SAM system. */
 	sysclk_init();
 	board_init();
-
+	
+	/* Configure UART for debug message output. */
+	configure_console();
+	
+	puts("-- UART_USART Library --\r");
+	puts("-- Developed and made by amof 2018--\r");
+		
+	
 	/* Configure USART-USART */
 	configure_uart();
+		
 	uint8_t buffer[8][255];
 	uint8_t pointers[8]={0,0,0,0,0,0,0,0};
 	

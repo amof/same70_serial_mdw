@@ -67,6 +67,7 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(UART0_IRQn);
 		NVIC_EnableIRQ(UART0_IRQn);
 		uart_enable_interrupt(UART0, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("UART0 initialized"));
 	}
 	else if(UART1 == (Uart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_UART1);
@@ -74,6 +75,7 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(UART1_IRQn);
 		NVIC_EnableIRQ(UART1_IRQn);
 		uart_enable_interrupt(UART1, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("UART1 initialized"));
 	}
 	else if(UART2 == (Uart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_UART2);
@@ -81,6 +83,7 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(UART2_IRQn);
 		NVIC_EnableIRQ(UART2_IRQn);
 		uart_enable_interrupt(UART2, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("UART2 initialized"));
 	}
 	else if(UART3 == (Uart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_UART3);
@@ -88,6 +91,7 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(UART3_IRQn);
 		NVIC_EnableIRQ(UART3_IRQn);
 		uart_enable_interrupt(UART3, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("UART3 initialized"));
 	}
 	else if(UART4 == (Uart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_UART4);
@@ -95,6 +99,7 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(UART4_IRQn);
 		NVIC_EnableIRQ(UART4_IRQn);
 		uart_enable_interrupt(UART4, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("UART4 initialized"));
 	}
 	else if(USART0 == (Usart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_USART0);
@@ -103,14 +108,18 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(USART0_IRQn);
 		NVIC_EnableIRQ(USART0_IRQn);
 		usart_enable_interrupt(USART0, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("USART0 initialized"));
 	}
 	else if(USART1 == (Usart*)p_usart){
-		sysclk_enable_peripheral_clock(ID_USART1);
-		usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
+		#ifndef SRL_MDW_DEBUG
+			sysclk_enable_peripheral_clock(ID_USART1);
+			usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
+		#endif
 		usart_enable_rx(USART1);
 		NVIC_ClearPendingIRQ(USART1_IRQn);
 		NVIC_EnableIRQ(USART1_IRQn);
 		usart_enable_interrupt(USART1, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("USART1 initialized"));
 	}
 	else if(USART2 == (Usart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_USART2);
@@ -119,6 +128,7 @@ usart_serial_options_t *opt)
 		NVIC_ClearPendingIRQ(USART2_IRQn);
 		NVIC_EnableIRQ(USART2_IRQn);
 		usart_enable_interrupt(USART2, UART_IER_RXRDY);
+		SRL_MDW_DEBUGF(("USART2 initialized"));
 	}
 
 }
