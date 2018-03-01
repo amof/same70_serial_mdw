@@ -55,9 +55,10 @@ LICENSE:
 
 /* Debug facilities. SRL_MDW_DEBUG must be defined to read output */
 #ifdef SRL_MDW_DEBUG
-#define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {printf("%s\r\n",x);}
+#define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {printf(x);printf("\r\n");}
 #define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {printf("Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); while(1);}
 #define SRL_MDW_DEBUGF(message) SRL_MDW_DEBUG_PLATFORM_DIAG(message)
+#define SRL_MDW_DEBUGA(buffer, length) srl_mdw_debug_buffer(buffer, length)
 #else
 #define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {;}
 #define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {while (1);}
@@ -80,5 +81,7 @@ extern void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t
 extern uint8_t serial_mdw_available(usart_if p_usart);
 
 extern uint16_t serial_mdw_readChar(usart_if p_usart);
+
+extern void srl_mdw_debug_buffer(const uint8_t *p_buff, uint8_t length);
 
 #endif /* SERIAL_MDW_H_ */

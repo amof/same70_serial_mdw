@@ -46,6 +46,7 @@ static void configure_console(void)
 	/* Configure console UART. */
 	sysclk_enable_peripheral_clock(ID_USART1);
 	stdio_serial_init(USART1, &uart_serial_option);
+	SRL_MDW_DEBUG("SRL_MDW_DEBUG activated");
 }
 
 static void configure_uart(void)
@@ -112,6 +113,7 @@ int main (void)
 			buffer[0][point_temp] = received;
 			pointers[0] = point_temp + 1;
 			if(point_temp==25){
+				SRL_MDW_DEBUGA(buffer[0], 26);
 				serial_mdw_sendData(UART0, buffer[0], 26);
 				pointers[0] = 0;
 			}
@@ -172,7 +174,7 @@ int main (void)
 			buffer[6][point_temp] = received;
 			pointers[6] = point_temp + 1;
 			if(point_temp==25){
-				serial_mdw_sendData(USART1, buffer[6], 26);
+				//serial_mdw_sendData(USART1, buffer[6], 26);
 				pointers[6]=0;
 			}
 		}
