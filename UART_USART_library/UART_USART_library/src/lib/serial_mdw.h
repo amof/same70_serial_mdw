@@ -37,13 +37,13 @@ LICENSE:
 #ifndef SERIAL_MDW_H_
 #define SERIAL_MDW_H_
 
+#include <stdio.h>
 #include "compiler.h"
 #include "sysclk.h"
 #include "uart.h"
 #include "usart.h"
 #include "status_codes.h"
 #include "uart_serial.h"
-#include "stdio_serial.h"
 
 /*
    ---------------------------------------
@@ -55,16 +55,22 @@ LICENSE:
 
 /* Debug facilities. SRL_MDW_DEBUG must be defined to read output */
 #ifdef SRL_MDW_DEBUG
-#define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {printf(x);printf("\r\n");}
+#define CONSOLE_ID	ID_USART1
+#define CONSOLE		USART1
 #define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {printf("Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); while(1);}
-#define SRL_MDW_DEBUGF(message) SRL_MDW_DEBUG_PLATFORM_DIAG(message)
-#define SRL_MDW_DEBUGA(buffer, length) srl_mdw_debug_buffer(buffer, length)
+#define SRL_MDW_DEBUGF(message) {printf(message);printf("\r\n");}
+extern void srl_mdw_debug_buffer(const uint8_t *p_buff, uint8_t length);	
 #else
-#define SRL_MDW_DEBUG_PLATFORM_DIAG(x)   {;}
 #define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {while (1);}
 #define SRL_MDW_DEBUGF(message)
 #endif
 
+extern volatile void *volatile stdio_base;
+//! Pointer to the external low level write function.
+extern int (*ptr_put)(void volatile*, char);
+
+//! Pointer to the external low level read function.
+extern void (*ptr_get)(void volatile*, char*);
 
 /*
    ---------------------------------------
@@ -82,6 +88,6 @@ extern uint8_t serial_mdw_available(usart_if p_usart);
 
 extern uint16_t serial_mdw_readChar(usart_if p_usart);
 
-extern void srl_mdw_debug_buffer(const uint8_t *p_buff, uint8_t length);
+extern void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *opt);
 
 #endif /* SERIAL_MDW_H_ */

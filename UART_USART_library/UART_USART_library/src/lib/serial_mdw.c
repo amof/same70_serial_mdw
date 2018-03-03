@@ -39,26 +39,28 @@ extern "C" {
 	
 	uint8_t uart_buffer_from_UART(usart_if p_usart);
 
-void serial_mdw_init(usart_if p_usart,
-usart_serial_options_t *opt)
+void serial_mdw_init(usart_if p_usart, usart_serial_options_t *opt)
 {
 	sam_uart_opt_t uart_settings;
-	uart_settings.ul_mck = sysclk_get_peripheral_hz();
-	uart_settings.ul_baudrate = opt->baudrate;
-	uart_settings.ul_mode = opt->paritytype;
-
 	sam_usart_opt_t usart_settings;
-	usart_settings.baudrate = opt->baudrate;
-	usart_settings.char_length = opt->charlength;
-	usart_settings.parity_type = opt->paritytype;
-	usart_settings.stop_bits= opt->stopbits;
-	usart_settings.channel_mode= US_MR_CHMODE_NORMAL;
+	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 	
-	for(uint8_t i=0;i<number_of_uart;i++){
-		for (uint8_t j=0;j<number_of_uart_buf_point;j++)
-		{
-			UART_buffer_pointers[i][j] = 0;
-		}
+	if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
+		uart_settings.ul_mck = sysclk_get_peripheral_hz();
+		uart_settings.ul_baudrate = opt->baudrate;
+		uart_settings.ul_mode = opt->paritytype;
+	}
+	else if(USART0 == (Usart*)p_usart || USART1 == (Usart*)p_usart || USART2 == (Usart*)p_usart ){
+		usart_settings.baudrate = opt->baudrate;
+		usart_settings.char_length = opt->charlength;
+		usart_settings.parity_type = opt->paritytype;
+		usart_settings.stop_bits= opt->stopbits;
+		usart_settings.channel_mode= US_MR_CHMODE_NORMAL;
+	}
+	
+	for (uint8_t i=0;i<number_of_uart_buf_point;i++)
+	{
+		UART_buffer_pointers[uart_buffer][i] = 0;
 	}
 	
 	if(UART0 == (Uart*)p_usart){
@@ -111,15 +113,15 @@ usart_serial_options_t *opt)
 		SRL_MDW_DEBUGF("USART0 initialized");
 	}
 	else if(USART1 == (Usart*)p_usart){
-		#ifndef SRL_MDW_DEBUG
-			sysclk_enable_peripheral_clock(ID_USART1);
-			usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
-		#endif
+		sysclk_enable_peripheral_clock(ID_USART1);
+		usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
 		usart_enable_rx(USART1);
 		NVIC_ClearPendingIRQ(USART1_IRQn);
 		NVIC_EnableIRQ(USART1_IRQn);
 		usart_enable_interrupt(USART1, UART_IER_RXRDY);
+		#ifndef SRL_MDW_DEBUG
 		SRL_MDW_DEBUGF("USART1 initialized");
+		#endif
 	}
 	else if(USART2 == (Usart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_USART2);
@@ -146,9 +148,23 @@ usart_serial_options_t *opt)
 	*/
 	int serial_mdw_putchar(usart_if p_usart, const uint8_t c)
 	{
+		uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+		uint16_t tmphead = 0;
+		
+		tmphead = (UART_buffer_pointers[uart_buffer][UART_TxHead] + 1) & 0xFF;
+		if (tmphead != UART_buffer_pointers[uart_buffer][UART_TxTail]){
+			//there is room in buffer
+			UART_TxBuf[uart_buffer][tmphead] = c;
+			UART_buffer_pointers[uart_buffer][UART_TxHead] = tmphead;
+		}
+		
 		if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
-			while (uart_write((Uart*)p_usart, c)!=0);
-			return 1;
+			uart_enable_tx((Uart*)p_usart);
+			uart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
+		}
+		else if(USART0 == (Usart*)p_usart || USART1 == (Usart*)p_usart || USART2 == (Usart*)p_usart ){
+			usart_enable_tx((Uart*)p_usart);
+			usart_enable_interrupt((Uart*)p_usart, UART_IER_TXRDY | UART_IER_TXEMPTY);
 		}
 		return 0;
 	}
@@ -174,7 +190,7 @@ usart_serial_options_t *opt)
 				//there is room in buffer
 				UART_TxBuf[uart_buffer][tmphead] = *p_buff;
 				UART_buffer_pointers[uart_buffer][UART_TxHead] = tmphead;
-				p_buff++;
+				if(i<ulsize-1) p_buff++;
 			}
 		}
 		
@@ -551,7 +567,7 @@ usart_serial_options_t *opt)
 		return uart_buffer;
 				
 	}
-	
+	#ifdef SRL_MDW_DEBUG
 	void srl_mdw_debug_buffer(const uint8_t *p_buff, uint8_t length){
 		printf("UART0 RX: <");
 		for(uint8_t i=0;i<26;i++){
@@ -559,6 +575,27 @@ usart_serial_options_t *opt)
 			p_buff++;
 		}
 		printf("\b>\r\n");
+	}
+	#endif
+	
+	void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *opt){
+		stdio_base = (void *)usart;
+		ptr_put = (int (*)(void volatile*,char))&serial_mdw_putchar;
+		ptr_get = (void (*)(void volatile*,char*))&serial_mdw_readChar;
+		
+		serial_mdw_init((Usart *)usart,(usart_serial_options_t *)opt);
+		
+		// For AVR32 and SAM GCC
+		// Specify that stdout and stdin should not be buffered.
+		setbuf(stdout, NULL);
+		setbuf(stdin, NULL);
+		// Note: Already the case in IAR's Normal DLIB default configuration
+		// and AVR GCC library:
+		// - printf() emits one character at a time.
+		// - getchar() requests only 1 byte to exit.
+
+		
+		
 	}
 	
 	/// @cond 0

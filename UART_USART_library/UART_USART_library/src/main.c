@@ -44,9 +44,7 @@ static void configure_console(void)
 	};
 
 	/* Configure console UART. */
-	sysclk_enable_peripheral_clock(ID_USART1);
-	stdio_serial_init(USART1, &uart_serial_option);
-	SRL_MDW_DEBUG("SRL_MDW_DEBUG activated");
+	serial_mdw_stdio_init(CONSOLE, &uart_serial_option);
 }
 
 static void configure_uart(void)
@@ -68,7 +66,9 @@ static void configure_uart(void)
 	serial_mdw_init(UART3, &usart_console_settings);
 	serial_mdw_init(UART4, &usart_console_settings);
 	serial_mdw_init(USART0, &usart_console_settings);
-	serial_mdw_init(USART1, &usart_console_settings);
+	#ifndef SRL_MDW_DEBUG
+		serial_mdw_init(USART1, &usart_console_settings);
+	#endif
 	serial_mdw_init(USART2, &usart_console_settings);	
 }
 
@@ -83,6 +83,10 @@ int main (void)
 	
 	puts("-- UART_USART Library --\r");
 	puts("-- Developed and made by amof 2018--\r");
+	
+	#ifdef SRL_MDW_DEBUG
+		puts("USART1 initialized with SERIAL_MDW_DEBUG ACTIVATED\r");
+	#endif
 		
 	
 	/* Configure USART-USART */
@@ -113,7 +117,7 @@ int main (void)
 			buffer[0][point_temp] = received;
 			pointers[0] = point_temp + 1;
 			if(point_temp==25){
-				SRL_MDW_DEBUGA(buffer[0], 26);
+				srl_mdw_debug_buffer(buffer[0], 26);
 				serial_mdw_sendData(UART0, buffer[0], 26);
 				pointers[0] = 0;
 			}
