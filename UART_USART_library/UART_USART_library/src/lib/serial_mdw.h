@@ -78,7 +78,7 @@ extern void (*ptr_get)(void volatile*, char*);
    ---------------------------------------
 */
 
-extern void serial_mdw_init(usart_if p_usart,usart_serial_options_t *opt) ;
+extern void serial_mdw_init(usart_if p_usart,const usart_serial_options_t *opt) ;
 
 extern int serial_mdw_putchar(usart_if p_usart, const uint8_t c);
 

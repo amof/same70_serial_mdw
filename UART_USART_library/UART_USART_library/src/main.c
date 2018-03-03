@@ -49,27 +49,24 @@ static void configure_console(void)
 
 static void configure_uart(void)
 {
-	const sam_usart_opt_t usart_console_settings = {
-		115200ul,
-		US_MR_CHRL_8_BIT,
-		US_MR_PAR_NO,
-		US_MR_NBSTOP_1_BIT,
-		US_MR_CHMODE_NORMAL,
-		/* This field is only used in IrDA mode. */
-		0
+	const usart_serial_options_t serial_option = {
+		.baudrate = 115200ul,
+		.charlength = US_MR_CHRL_8_BIT,
+		.paritytype = US_MR_PAR_NO,
+		.stopbits = US_MR_NBSTOP_1_BIT
 	};
 	
 	/* Initialize UART interfaces. */
-	serial_mdw_init(UART0, &usart_console_settings);
-	serial_mdw_init(UART1, &usart_console_settings);
-	serial_mdw_init(UART2, &usart_console_settings);
-	serial_mdw_init(UART3, &usart_console_settings);
-	serial_mdw_init(UART4, &usart_console_settings);
-	serial_mdw_init(USART0, &usart_console_settings);
+	serial_mdw_init(UART0, &serial_option);
+	serial_mdw_init(UART1, &serial_option);
+	serial_mdw_init(UART2, &serial_option);
+	serial_mdw_init(UART3, &serial_option);
+	serial_mdw_init(UART4, &serial_option);
+	serial_mdw_init(USART0, &serial_option);
 	#ifndef SRL_MDW_DEBUG
-		serial_mdw_init(USART1, &usart_console_settings);
+		serial_mdw_init(USART1, &serial_option);
 	#endif
-	serial_mdw_init(USART2, &usart_console_settings);	
+	serial_mdw_init(USART2, &serial_option);	
 }
 
 int main (void)
