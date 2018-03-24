@@ -233,7 +233,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 			
 			if ( tmphead != UART_buffer_pointers[UART0_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = uart_read(UART0, &uc_char);
+				uart_read(UART0, &uc_char);
 				UART_RxBuf[UART0_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[UART0_buffer][UART_RxHead] = tmphead;
@@ -271,7 +271,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 			
 			if ( tmphead != UART_buffer_pointers[UART1_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = uart_read(UART1, &uc_char);
+				uart_read(UART1, &uc_char);
 				UART_RxBuf[UART1_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[UART1_buffer][UART_RxHead] = tmphead;
@@ -309,7 +309,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 			
 			if ( tmphead != UART_buffer_pointers[UART2_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = uart_read(UART2, &uc_char);
+				uart_read(UART2, &uc_char);
 				UART_RxBuf[UART2_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[UART2_buffer][UART_RxHead] = tmphead;
@@ -347,7 +347,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 			
 			if ( tmphead != UART_buffer_pointers[UART3_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = uart_read(UART0, &uc_char);
+				uart_read(UART3, &uc_char);
 				UART_RxBuf[UART3_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[UART3_buffer][UART_RxHead] = tmphead;
@@ -369,11 +369,11 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 		
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
-			if ( UART_buffer_pointers[UART4_buffer][UART_TxHead] != UART_buffer_pointers[UART4_buffer][UART_TxTail]) {	
-				tmptail = (UART_buffer_pointers[UART4_buffer][UART_TxTail] + 1) & 0xFF;			
+			if ( UART_buffer_pointers[UART4_buffer][UART_TxHead] != UART_buffer_pointers[UART4_buffer][UART_TxTail]) {
+				tmptail = (UART_buffer_pointers[UART4_buffer][UART_TxTail] + 1) & 0xFF;
 				uart_write(UART4, UART_TxBuf[UART4_buffer][tmptail]);
 				UART_buffer_pointers[UART4_buffer][UART_TxTail] = tmptail;
-			}else{
+				}else{
 				uart_disable_interrupt(UART4, (UART_IER_TXRDY | UART_IER_TXEMPTY));
 				uart_disable_tx(UART4);
 			}
@@ -384,10 +384,10 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 			tmphead = ( UART_buffer_pointers[UART4_buffer][UART_RxHead] + 1) & 0xFF;
 			
 			if ( tmphead != UART_buffer_pointers[UART4_buffer][UART_RxTail] ) {
-				// store received data in buffer 
-				uint32_t status = uart_read(UART0, &uc_char);
+				// store received data in buffer
+				uart_read(UART4, &uc_char);
 				UART_RxBuf[UART4_buffer][tmphead] = uc_char;
-				// store new index 
+				// store new index
 				UART_buffer_pointers[UART4_buffer][UART_RxHead] = tmphead;
 			}
 
@@ -425,7 +425,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 			
 			if ( tmphead != UART_buffer_pointers[USART0_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = usart_read(USART0, &uc_char);
+				usart_read(USART0, &uc_char);
 				UART_RxBuf[USART0_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[USART0_buffer][UART_RxHead] = tmphead;
@@ -437,7 +437,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 	
 	void USART1_Handler(void)
 	{
-			
+		
 		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
@@ -445,7 +445,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 
 		/* Read USART status. */
 		ul_status = usart_get_status(USART1);
-			
+		
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
 			if ( UART_buffer_pointers[USART1_buffer][UART_TxHead] != UART_buffer_pointers[USART1_buffer][UART_TxTail]) {
@@ -459,24 +459,24 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 		}
 		/*receive interrupt rises*/
 		if (ul_status & US_CSR_RXRDY ) {
-				
+			
 			tmphead = ( UART_buffer_pointers[USART1_buffer][UART_RxHead] + 1) & 0xFF;
-				
+			
 			if ( tmphead != UART_buffer_pointers[USART1_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = usart_read(USART1, &uc_char);
+				usart_read(USART1, &uc_char);
 				UART_RxBuf[USART1_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[USART1_buffer][UART_RxHead] = tmphead;
 			}
 
-				
+			
 		}
 	}
-		
+	
 	void USART2_Handler(void)
 	{
-				
+		
 		uint32_t uc_char;
 		uint16_t tmphead;
 		uint16_t tmptail;
@@ -484,7 +484,7 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 
 		/* Read USART status. */
 		ul_status = usart_get_status(USART2);
-				
+		
 		/*transmit interrupt rises*/
 		if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
 			if ( UART_buffer_pointers[USART2_buffer][UART_TxHead] != UART_buffer_pointers[USART2_buffer][UART_TxTail]) {
@@ -498,20 +498,20 @@ void serial_mdw_init(usart_if p_usart, const usart_serial_options_t *opt)
 		}
 		/*receive interrupt rises*/
 		if (ul_status & US_CSR_RXRDY ) {
-					
+			
 			tmphead = ( UART_buffer_pointers[USART2_buffer][UART_RxHead] + 1) & 0xFF;
-					
+			
 			if ( tmphead != UART_buffer_pointers[USART2_buffer][UART_RxTail] ) {
 				// store received data in buffer
-				uint32_t status = usart_read(USART2, &uc_char);
-				UART_RxBuf[USART2_buffer][tmphead] = uc_char; 
+				usart_read(USART2, &uc_char);
+				UART_RxBuf[USART2_buffer][tmphead] = uc_char;
 				// store new index
 				UART_buffer_pointers[USART2_buffer][UART_RxHead] = tmphead;
 			}
 
-					
+			
 		}
-	}	
+	}
 	
 	
 	uint8_t serial_mdw_available(usart_if p_usart)

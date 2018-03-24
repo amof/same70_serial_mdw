@@ -92,17 +92,17 @@
 
 /*----------------------------------------------------------------------------*/
 
-/** USART1 pins definitions, PA21,PB4. */
-#define USART1_RXD_GPIO   PIO_PA21_IDX
-#define USART1_RXD_FLAGS  IOPORT_MODE_MUX_A
-#define USART1_TXD_GPIO   PIO_PB4_IDX
-#define USART1_TXD_FLAGS  IOPORT_MODE_MUX_D
-
 /** USART0 pins definitions, PB0,PB1. */
 #define USART0_RXD_GPIO   PIO_PB0_IDX
 #define USART0_RXD_FLAGS  IOPORT_MODE_MUX_C
 #define USART0_TXD_GPIO   PIO_PB1_IDX
 #define USART0_TXD_FLAGS  IOPORT_MODE_MUX_C
+
+/** USART1 pins definitions, PA21,PB4. */
+#define USART1_RXD_GPIO   PIO_PA21_IDX
+#define USART1_RXD_FLAGS  IOPORT_MODE_MUX_A
+#define USART1_TXD_GPIO   PIO_PB4_IDX
+#define USART1_TXD_FLAGS  IOPORT_MODE_MUX_D
 
 /** USART2 pins definitions */
 #define USART2_RXD_GPIO   PIO_PD15_IDX
