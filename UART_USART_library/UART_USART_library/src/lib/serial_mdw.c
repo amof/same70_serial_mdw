@@ -27,10 +27,9 @@ extern "C" {
 	* @{
 	*/
 	
-	#define number_of_uart 8
 	#define number_of_uart_buf_point 4
 
-	enum UART_pointers {UART_RxHead, UART_RxTail, UART_TxHead, UART_TxTail};
+	enum UART_buffer_pointers_definition {UART_RxHead, UART_RxTail, UART_TxHead, UART_TxTail};
 	enum UART_buffers {UART0_buffer, UART1_buffer, UART2_buffer, UART3_buffer, UART4_buffer, USART0_buffer, USART1_buffer, USART2_buffer};
 
 	static volatile uint8_t UART_buffer_pointers[number_of_uart][number_of_uart_buf_point];

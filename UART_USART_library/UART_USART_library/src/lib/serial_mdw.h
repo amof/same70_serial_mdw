@@ -47,11 +47,19 @@ LICENSE:
 
 /*
    ---------------------------------------
+   --------------- Includes --------------
+   ---------------------------------------
+*/
+
+#define number_of_uart 8
+
+/*
+   ---------------------------------------
    ---------- Debugging options ----------
    ---------------------------------------
 */
 
-#define SRL_MDW_DEBUG
+//#define SRL_MDW_DEBUG
 
 /* Debug facilities. SRL_MDW_DEBUG must be defined to read output */
 #ifdef SRL_MDW_DEBUG
