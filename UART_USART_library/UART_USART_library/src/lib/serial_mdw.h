@@ -7,7 +7,7 @@ License:  GNU General Public License 3
 Usage:    see Doxygen manual
 
 LICENSE:
-	Copyright (C) 2015 Julien Delvaux
+	Copyright (C) 2018 Julien Delvaux
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -63,13 +63,8 @@ LICENSE:
 
 /* Debug facilities. SRL_MDW_DEBUG must be defined to read output */
 #ifdef SRL_MDW_DEBUG
-#define CONSOLE_ID	ID_USART1
-#define CONSOLE		USART1
-#define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {printf("Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); while(1);}
-#define SRL_MDW_DEBUGF(message) {printf(message);printf("\r\n");}
-extern void srl_mdw_debug_buffer(const uint8_t *p_buff, uint8_t length);	
+#define SRL_MDW_DEBUGF(message) {printf("%s\r\n",message);}
 #else
-#define SRL_MDW_DEBUG_PLATFORM_ASSERT(x) {while (1);}
 #define SRL_MDW_DEBUGF(message)
 #endif
 
@@ -85,8 +80,7 @@ extern void (*ptr_get)(void volatile*, char*);
    -------------- Functions --------------
    ---------------------------------------
 */
-
-extern void serial_mdw_init(usart_if p_usart,const usart_serial_options_t *opt) ;
+extern void serial_mdw_init_interface(usart_if p_usart,const usart_serial_options_t *opt) ;
 
 extern int serial_mdw_putchar(usart_if p_usart, const uint8_t c);
 
@@ -97,5 +91,7 @@ extern uint8_t serial_mdw_available(usart_if p_usart);
 extern uint16_t serial_mdw_readChar(usart_if p_usart);
 
 extern void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *opt);
+
+extern void serial_mdw_set_logInterface(usart_if p_usart);
 
 #endif /* SERIAL_MDW_H_ */

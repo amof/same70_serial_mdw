@@ -30,24 +30,7 @@
  */
 #include <asf.h>
 #include "lib/serial_mdw.h"
-
-#ifdef SRL_MDW_DEBUG
-/**
- *  Configure UART for debug message output.
- */
-static void configure_console(void)
-{
-	const usart_serial_options_t uart_serial_option = {
-		.baudrate = 115200ul,
-		.charlength = US_MR_CHRL_8_BIT,
-		.paritytype = US_MR_PAR_NO,
-		.stopbits = US_MR_NBSTOP_1_BIT
-	};
-
-	/* Configure console UART. */
-	serial_mdw_stdio_init(CONSOLE, &uart_serial_option);
-}
-#endif
+#include "lib/logger.h"
 
 static void configure_uart(void)
 {
@@ -58,17 +41,15 @@ static void configure_uart(void)
 		.stopbits = US_MR_NBSTOP_1_BIT
 	};
 	
-	/* Initialize UART interfaces. */
-	serial_mdw_init(UART0, &serial_option);
-	serial_mdw_init(UART1, &serial_option);
-	serial_mdw_init(UART2, &serial_option);
-	serial_mdw_init(UART3, &serial_option);
-	serial_mdw_init(UART4, &serial_option);
-	serial_mdw_init(USART0, &serial_option);
-	#ifndef SRL_MDW_DEBUG
-		serial_mdw_init(USART1, &serial_option);
-	#endif
-	serial_mdw_init(USART2, &serial_option);	
+	/* Initialize UART/USART interfaces. */
+	serial_mdw_init_interface(UART0, &serial_option);
+	serial_mdw_init_interface(UART1, &serial_option);
+	serial_mdw_init_interface(UART2, &serial_option);
+	serial_mdw_init_interface(UART3, &serial_option);
+	serial_mdw_init_interface(UART4, &serial_option);
+	serial_mdw_init_interface(USART0, &serial_option);
+	serial_mdw_init_interface(USART1, &serial_option);
+	serial_mdw_init_interface(USART2, &serial_option);	
 }
 
 int main (void)
@@ -77,21 +58,17 @@ int main (void)
 	sysclk_init();
 	board_init();
 
-	#ifdef SRL_MDW_DEBUG
-		/* Configure UART for debug message output. */
-		configure_console();
+	/* Configure UART for debug message output. */
+	logger_init();
 		
-		puts("-- UART_USART Library --\r");
-		puts("-- Developed and made by amof 2018--\r");
-		puts("USART1 initialized with SERIAL_MDW_DEBUG ACTIVATED\r");
-	#endif
-		
+	log_info("-- UART_USART Library --\r\n");
+	log_info("-- Developed and made by amof 2018--\r\n");		
 	
-	/* Configure USART-USART */
+	/* Configure UART-USART */
 	configure_uart();
 		
 	uint8_t buffer[number_of_uart][255];
-	volatile uint8_t pointers[number_of_uart]={0,0,0,0,0,0,0,0};
+	volatile uint8_t pointers[number_of_uart]={0};
 	const uint32_t uart_pointers[number_of_uart] ={UART0, UART1, UART2, UART3, UART4, USART0, USART1, USART2} ;
 	
 	while (1)
