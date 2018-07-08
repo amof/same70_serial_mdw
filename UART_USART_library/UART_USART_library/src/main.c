@@ -42,14 +42,14 @@ static void configure_uart(void)
 	};
 	
 	/* Initialize UART/USART interfaces. */
-	serial_mdw_init_interface(UART0, &serial_option);
-	serial_mdw_init_interface(UART1, &serial_option);
-	serial_mdw_init_interface(UART2, &serial_option);
-	serial_mdw_init_interface(UART3, &serial_option);
-	serial_mdw_init_interface(UART4, &serial_option);
-	serial_mdw_init_interface(USART0, &serial_option);
-	serial_mdw_init_interface(USART1, &serial_option);
-	serial_mdw_init_interface(USART2, &serial_option);	
+	serial_mdw_init_interface((usart_if)UART0, &serial_option);
+	serial_mdw_init_interface((usart_if)UART1, &serial_option);
+	serial_mdw_init_interface((usart_if)UART2, &serial_option);
+	serial_mdw_init_interface((usart_if)UART3, &serial_option);
+	serial_mdw_init_interface((usart_if)UART4, &serial_option);
+	serial_mdw_init_interface((usart_if)USART0, &serial_option);
+	serial_mdw_init_interface((usart_if)USART1, &serial_option);
+	serial_mdw_init_interface((usart_if)USART2, &serial_option);	
 }
 
 int main (void)
@@ -69,7 +69,7 @@ int main (void)
 		
 	uint8_t buffer[number_of_uart][255];
 	volatile uint8_t pointers[number_of_uart]={0};
-	const uint32_t uart_pointers[number_of_uart] ={UART0, UART1, UART2, UART3, UART4, USART0, USART1, USART2} ;
+	const usart_if uart_pointers[number_of_uart] ={(usart_if)UART0, (usart_if)UART1, (usart_if)UART2, (usart_if)UART3, (usart_if)UART4, (usart_if)USART0, (usart_if)USART1, (usart_if)USART2} ;
 	
 	while (1)
 	{

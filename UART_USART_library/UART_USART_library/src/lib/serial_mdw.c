@@ -31,9 +31,9 @@ extern "C" {
 	#define SIZE_OF_BUFFER 255
 	enum UART_buffer_pointers_definition {UART_RxHead, UART_RxTail, UART_TxHead, UART_TxTail};
 	enum UART_pointers {UART0_pointer, UART1_pointer, UART2_pointer, UART3_pointer, UART4_pointer, USART0_pointer, USART1_pointer, USART2_pointer};
-	enum UART_status_definition{NOT_INITIALIZED, INITIALIZED, ERROR};
+	enum UART_status_definition{NOT_INITIALIZED, INITIALIZED, ERROR, OVERFLOW};
 
-	static volatile uint8_t UART_buffer_pointers[number_of_uart][number_of_uart_buf_point];
+	static volatile uint8_t UART_buffer_pointers[number_of_uart][number_of_uart_buf_point] = {0};
 	static volatile uint8_t UART_RxBuf[number_of_uart][SIZE_OF_BUFFER] = {0};
 	static volatile uint8_t UART_TxBuf[number_of_uart][SIZE_OF_BUFFER] = {0};
 	static uint8_t UART_status[number_of_uart] = {NOT_INITIALIZED};
@@ -138,7 +138,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		UART_status[uart_buffer] = INITIALIZED;
 		SRL_MDW_DEBUGF("USART2 initialized");
 	}
-	else if(UART_status[uart_buffer]==INITIALIZED){
+	else if(UART_status[uart_buffer] == INITIALIZED){
 		SRL_MDW_DEBUGF("Interface already initialized");
 	}
 	else{
@@ -175,6 +175,8 @@ int serial_mdw_putchar(usart_if p_usart, const uint8_t c)
 		//there is room in buffer
 		UART_TxBuf[uart_buffer][tmphead] = c;
 		UART_buffer_pointers[uart_buffer][UART_TxHead] = tmphead;
+	}else{
+		UART_status[uart_buffer] = OVERFLOW;
 	}
 		
 	if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
@@ -210,6 +212,9 @@ void serial_mdw_sendData(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsiz
 			UART_TxBuf[uart_buffer][tmphead] = *p_buff;
 			UART_buffer_pointers[uart_buffer][UART_TxHead] = tmphead;
 			if(i<ulsize-1) p_buff++;
+		}else{
+			UART_status[uart_buffer] = OVERFLOW;
+			break;
 		}
 	}
 		
@@ -426,8 +431,7 @@ void USART0_Handler(void)
 	ul_status = usart_get_status(USART0);
 		
 	/*transmit interrupt rises*/
-	// TODO rename according to USART instead of UART
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
+	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
 		if ( UART_buffer_pointers[USART0_pointer][UART_TxHead] != UART_buffer_pointers[USART0_pointer][UART_TxTail]) {
 			tmptail = (UART_buffer_pointers[USART0_pointer][UART_TxTail] + 1) & 0xFF;
 			usart_write(USART0, UART_TxBuf[USART0_pointer][tmptail]);
@@ -466,7 +470,7 @@ void USART1_Handler(void)
 	ul_status = usart_get_status(USART1);
 		
 	/*transmit interrupt rises*/
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
+	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
 		if ( UART_buffer_pointers[USART1_pointer][UART_TxHead] != UART_buffer_pointers[USART1_pointer][UART_TxTail]) {
 			tmptail = (UART_buffer_pointers[USART1_pointer][UART_TxTail] + 1) & 0xFF;
 			usart_write(USART1, UART_TxBuf[USART1_pointer][tmptail]);
@@ -505,7 +509,7 @@ void USART2_Handler(void)
 	ul_status = usart_get_status(USART2);
 		
 	/*transmit interrupt rises*/
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
+	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
 		if ( UART_buffer_pointers[USART2_pointer][UART_TxHead] != UART_buffer_pointers[USART2_pointer][UART_TxTail]) {
 			tmptail = (UART_buffer_pointers[USART2_pointer][UART_TxTail] + 1) & 0xFF;
 			usart_write(USART2, UART_TxBuf[USART2_pointer][tmptail]);
