@@ -581,6 +581,7 @@
     <Folder Include="src\ASF\thirdparty\CMSIS\Lib\GCC\" />
     <Folder Include="src\config\" />
     <Folder Include="src\lib" />
+    <Folder Include="src\lib\utils" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\ASF\common\services\serial\sam_uart\uart_serial.h">
@@ -1130,6 +1131,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\utils\syscalls\gcc\syscalls.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lib\utils\circular-byte-buffer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lib\utils\circular-byte-buffer.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.c">
