@@ -44,6 +44,7 @@ LICENSE:
 #include "usart.h"
 #include "status_codes.h"
 #include "uart_serial.h"
+#include "utils/circular-byte-buffer.h"
 
 /*
    ---------------------------------------
@@ -52,6 +53,8 @@ LICENSE:
 */
 
 #define number_of_uart 8
+
+#define SERIAL_MDW_BUFFER_SIZE 256
 
 /*
    ---------------------------------------
@@ -82,9 +85,9 @@ extern void (*ptr_get)(void volatile*, char*);
 */
 extern void serial_mdw_init_interface(usart_if p_usart,const usart_serial_options_t *opt) ;
 
-extern int serial_mdw_putchar(usart_if p_usart, const uint8_t c);
+extern uint8_t serial_mdw_putchar(usart_if p_usart, const uint8_t c);
 
-extern void serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize);
+extern uint8_t serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize);
 
 extern uint8_t serial_mdw_available(usart_if p_usart);
 
