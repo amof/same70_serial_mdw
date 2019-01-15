@@ -1,45 +1,41 @@
-/************************************************************************
-Title:    Logger Library
-Author:   Julien Delvaux based on rxi library: https://github.com/rxi/log.c/
-Software: Atmel Studio 7
-Hardware: SAME70Q21
-License:  GNU General Public License 3
-Usage:    see Doxygen manual
+/*
+							        *******************
+******************************* C HEADER FILE *******************************
+**                           *******************                           **
+**                                                                         **
+** project   : RAPTORS                                                     ** 
+** filename  : logger                                                      **
+** date      : January 11, 2019                                            **
+** author    : Julien Delvaux                                              **
+** licence   : MIT                                                         **
+**                                                                         **
+*****************************************************************************
+Based on rxi library: https://github.com/rxi/log.c/
 
-LICENSE:
-	Copyright (C) 2018 Julien Delvaux
-
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 3 of the License, or
-	any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-    
-************************************************************************/
-
-/** 
- *  @defgroup Logger Library
- *  @code #include <logger.h> @endcode
- * 
- *  @brief
- *
- *
- *  @author Julien Delvaux <delvaux.ju@gmail.com>
- */
-
+*/
 
 
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#include "serial_mdw.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+#if defined(__SAME70Q21__)
+#   include "compiler.h"
+#	include "../config/conf_board.h"
+#else
+#   include <stdint.h>
+#endif
+
+#if defined(SERIAL_LOG)
+#   include "serial_mdw.h"
+#   include "delay.h"
+#else
+#	warning "Logger not activated"
+#endif
 
 /*
    ---------------------------------------
@@ -47,24 +43,18 @@ enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
    ---------------------------------------
 */
 
-// Define on which interface you want to output the traces
-#define SERIAL_LOG
-//#define ETHERNET_LOG TO IMPLEMENT
+typedef enum {LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL} log_level_t;
 
-// Define the level of logging
-#define LOG_LEVEL LOG_DEBUG
-
-// Define if you want to use a basic output format or a more verbose one
-//#define BASIC_LOG
+// Define if you want to use a more verbose option
 #define ADVANCED_LOG
+#define LOGGER_MESSAGE_MAX_LENGTH 100
 
-/*
-   ---------------------------------------
-   ---------- Serial Logger ----------
-   ---------------------------------------
-*/
-
-#define SERIAL_LOG_ID	USART1
+#if defined(SERIAL_LOG)
+// RAPTORS IS UART0
+// SAME70-XPLD is USART1 (use default USB com port)
+#   define SERIAL_LOG_ID	USART1
+    const static uint8_t	DELAY_TO_PRINT = 0;
+#endif
 
 /*
    ---------------------------------------
@@ -80,13 +70,13 @@ enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
 #define log_fatal(...) log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
 
-extern void logger_init(void);
+extern void logger_init(log_level_t log_level);
 
-extern void logger_set_level(uint8_t level);
+extern void logger_set_log_level(log_level_t log_level);
 
-extern void log_buffer(const uint8_t *text, uint8_t *p_buff, uint8_t length);
+extern void log_buffer(const char *text, uint8_t *p_buff, uint8_t length);
 
-extern void log_log(uint8_t level, const char *file, uint32_t line, const char *fmt, ...);
+extern void log_log(log_level_t level, const char *file, uint32_t line, const char *fmt, ...) __attribute__ ((format (gnu_printf, 4, 5)));
 
 
 #endif /* LOGGER_H_ */
