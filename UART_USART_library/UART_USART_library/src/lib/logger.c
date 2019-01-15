@@ -24,22 +24,23 @@ void logger_set_log_level(log_level_t log_level)
 	logger_log_level = log_level;
 }
 
-void log_buffer(const char *text, uint8_t *p_buff, uint8_t length)
+void log_buffer(const char *text, const char *end_text,uint8_t *p_buff, uint8_t buffer_length)
 {
+	uint8_t length = 0;
     char buffer [LOGGER_MESSAGE_MAX_LENGTH] ={0};
-    char *put = buffer;
 
-    put += snprintf(put, LOGGER_MESSAGE_MAX_LENGTH, "%s <", text);
+    length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "%s <", text);
 
-    for(uint8_t i=0; i<length; i++){
-        put += snprintf(put, sizeof buffer - (put - buffer), "%u:", *p_buff);
+    for(uint8_t i=0; i<buffer_length; i++){
+        length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "%u:", *p_buff);
 		p_buff++;
 	}
 
-	put += snprintf(put, LOGGER_MESSAGE_MAX_LENGTH, "\b>");
+	length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "\b>");
+	length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "%s", end_text);
 
 	#if defined(SERIAL_LOG)
-        if(length >= 0) serial_mdw_send_bytes(SERIAL_LOG_ID, buffer, (uint32_t)length);
+        if(length >= 0) serial_mdw_send_bytes(SERIAL_LOG_ID, (uint8_t *)buffer, (uint32_t)length);
 		delay_ms(DELAY_TO_PRINT);
     #elif defined(CONSOLE_LOG)
         printf("%s\n",buffer, length);
@@ -68,7 +69,7 @@ void log_log(log_level_t level, const char *file, uint32_t line, const char *fmt
 		#endif
 
         #if defined(SERIAL_LOG)
-			if(length >= 0) serial_mdw_send_bytes(SERIAL_LOG_ID, buffer, (uint32_t)length);
+			if(length >= 0) serial_mdw_send_bytes(SERIAL_LOG_ID, (uint8_t *)buffer, (uint32_t)length);
 		    delay_ms(DELAY_TO_PRINT);
 		#elif defined(CONSOLE_LOG)
 			printf("%s\n",buffer, length);

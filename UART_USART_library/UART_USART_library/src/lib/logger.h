@@ -53,7 +53,7 @@ typedef enum {LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL} lo
 // RAPTORS IS UART0
 // SAME70-XPLD is USART1 (use default USB com port)
 #   define SERIAL_LOG_ID	USART1
-    const static uint8_t	DELAY_TO_PRINT = 0;
+    const static uint8_t	DELAY_TO_PRINT = 0; // This parameter will influence greatly the behavior of the system because of the delay introduced
 #endif
 
 /*
@@ -74,7 +74,7 @@ extern void logger_init(log_level_t log_level);
 
 extern void logger_set_log_level(log_level_t log_level);
 
-extern void log_buffer(const char *text, uint8_t *p_buff, uint8_t length);
+extern void log_buffer(const char *text, const char *end_text,uint8_t *p_buff, uint8_t buffer_length);
 
 extern void log_log(log_level_t level, const char *file, uint32_t line, const char *fmt, ...) __attribute__ ((format (gnu_printf, 4, 5)));
 
