@@ -45,6 +45,14 @@ LICENSE:
 #include "status_codes.h"
 #include "uart_serial.h"
 #include "utils/circular-byte-buffer.h"
+#include "utils/timestamp-buffer.h"
+
+typedef struct s_serial_mdw_data_timestamp_t
+{
+	uint8_t *data;
+	uint32_t length;
+	uint64_t timestamp;
+}s_serial_mdw_data_timestamp;
 
 /*
    ---------------------------------------
@@ -55,7 +63,12 @@ LICENSE:
 #define number_of_uart 8
 
 #define SERIAL_MDW_BUFFER_SIZE 256
+#define SERIAL_MDW_BUFFER_TIMESTAMP_SIZE 20
 
+static const uint8_t char_to_compare_for_timestamp = 69;
+static volatile uint64_t unix_timestamp_ms = 0UL;
+
+//#define ACTIVATE_TIMESTAMP_RECORDING
 /*
    ---------------------------------------
    ---------- Debugging options ----------
@@ -83,18 +96,29 @@ extern void (*ptr_get)(void volatile*, char*);
    -------------- Functions --------------
    ---------------------------------------
 */
-extern void serial_mdw_init_interface(usart_if p_usart,const usart_serial_options_t *opt) ;
 
-extern uint8_t serial_mdw_putchar(usart_if p_usart, const uint8_t c);
+// Init
+extern void serial_mdw_init(void);
+extern void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt) ;
 
-extern uint8_t serial_mdw_sendData(usart_if p_usart,const uint8_t *p_buff, uint32_t ulsize);
+// Send functions
+extern uint8_t serial_mdw_send_byte(usart_if p_usart, const uint8_t c);
+extern uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize);
 
-extern uint8_t serial_mdw_available(usart_if p_usart);
+// Basic read function
+extern uint32_t serial_mdw_available_bytes(usart_if p_usart);
+extern uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data);
+extern uint8_t serial_mdw_read_bytes(usart_if p_usart, uint8_t *data, uint32_t ulsize);
 
-extern uint16_t serial_mdw_readChar(usart_if p_usart);
+// Basic read function with timestamp
+#ifdef ACTIVATE_TIMESTAMP_RECORDING
+extern void serial_mdw_tmstp_available(uint8_t *buffer);
+extern uint32_t serial_mdw_tmstp_available_bytes(usart_if p_usart);
+extern uint8_t serial_mdw_tmstp_read(usart_if p_usart, s_serial_mdw_data_timestamp *data_timestamp);
+#endif
 
+// Init logging
 extern void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *opt);
-
 extern void serial_mdw_set_logInterface(usart_if p_usart);
 
 #endif /* SERIAL_MDW_H_ */

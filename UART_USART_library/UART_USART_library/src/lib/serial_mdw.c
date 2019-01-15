@@ -27,67 +27,68 @@ extern "C" {
 	* @{
 	*/
 	
-	typedef enum UART_status_definition{NOT_INITIALIZED, INITIALIZED, ERROR, OVERFLOW};
-	
-	typedef struct
+	typedef enum 
 	{
-		uint8_t *buffer_rx;
-		uint8_t *buffer_tx;
-		// TODO : how to handle timestamp ?
+		NOT_INITIALIZED, 
+		INITIALIZED, 
+		INIT_ERROR, 
+		ERROR, 
+		OVERFLOW
+	} UART_status_definition;
+	
+	typedef enum
+	{
+		UART0_pointer,
+		UART1_pointer,
+		UART2_pointer,
+		UART3_pointer,
+		UART4_pointer,
+		USART0_pointer,
+		USART1_pointer,
+		USART2_pointer
+	} UART_pointer;
+	
+	typedef struct s_serial_mdw_buffer_t
+	{
+		circ_bbuf_t buffer_rx;
+		circ_bbuf_t buffer_tx;
 		UART_status_definition status;
 		
+		#ifdef ACTIVATE_TIMESTAMP_RECORDING
+		timestamp_buf_t timestamp_buff;
+		uint32_t length_data;
+		uint64_t timestamp;
+		#endif
+
 	}s_serial_mdw_buffer;
 
 	s_serial_mdw_buffer serial_mdw_buffer[number_of_uart];
-	enum UART_pointers {UART0_pointer, UART1_pointer, UART2_pointer, UART3_pointer, UART4_pointer, USART0_pointer, USART1_pointer, USART2_pointer};
 	
 	static usart_if logger_uart = NULL;
 	
+	void handle_uart_interrupt(usart_if UART, UART_pointer uart_pointer);
+	void handle_usart_interrupt(usart_if UART, UART_pointer uart_pointer);
 	uint8_t uart_buffer_from_UART(usart_if p_usart);
+
 	
-void serial_mdw_init()
+void serial_mdw_init(void)
 {
-	// Initialization of buffers
-	CIRC_BBUF_DEF(BUFFER_UART0_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART1_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART2_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART3_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART4_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_USART0_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_USART1_RX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_USART2_RX, SERIAL_MDW_BUFFER_SIZE);
-	
-	CIRC_BBUF_DEF(BUFFER_UART0_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART1_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART2_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART3_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_UART4_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_USART0_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_USART1_TX, SERIAL_MDW_BUFFER_SIZE);
-	CIRC_BBUF_DEF(BUFFER_USART2_TX, SERIAL_MDW_BUFFER_SIZE);
-	
 	// Map the buffers to UART/USART
-	serial_mdw_buffer[UART0_pointer].buffer_rx = BUFFER_UART0_RX;
-	serial_mdw_buffer[UART0_pointer].buffer_tx = BUFFER_UART0_TX;
-	serial_mdw_buffer[UART1_pointer].buffer_rx = BUFFER_UART1_RX;
-	serial_mdw_buffer[UART1_pointer].buffer_tx = BUFFER_UART1_TX;
-	serial_mdw_buffer[UART2_pointer].buffer_rx = BUFFER_UART2_RX;
-	serial_mdw_buffer[UART2_pointer].buffer_tx = BUFFER_UART2_TX;
-	serial_mdw_buffer[UART3_pointer].buffer_rx = BUFFER_UART3_RX;
-	serial_mdw_buffer[UART3_pointer].buffer_tx = BUFFER_UART3_TX;
-	serial_mdw_buffer[UART4_pointer].buffer_rx = BUFFER_UART4_RX;
-	serial_mdw_buffer[UART4_pointer].buffer_tx = BUFFER_UART4_TX;
-	
-	serial_mdw_buffer[USART0_pointer].buffer_rx = BUFFER_USART0_RX;
-	serial_mdw_buffer[USART0_pointer].buffer_tx = BUFFER_USART0_TX;
-	serial_mdw_buffer[USART1_pointer].buffer_rx = BUFFER_USART1_RX;
-	serial_mdw_buffer[USART1_pointer].buffer_tx = BUFFER_USART1_TX;
-	serial_mdw_buffer[USART2_pointer].buffer_rx = BUFFER_USART2_RX;
-	serial_mdw_buffer[USART2_pointer].buffer_tx = BUFFER_USART2_TX;
+	for(uint8_t i=0; i<number_of_uart; i++)
+	{
+		circ_bbuf_create_buffer(&serial_mdw_buffer[i].buffer_rx, SERIAL_MDW_BUFFER_SIZE);
+		circ_bbuf_create_buffer(&serial_mdw_buffer[i].buffer_tx, SERIAL_MDW_BUFFER_SIZE);
+		#ifdef ACTIVATE_TIMESTAMP_RECORDING
+		tstp_create_buffer(&serial_mdw_buffer[i].timestamp_buff, SERIAL_MDW_BUFFER_TIMESTAMP_SIZE);
+		#endif
+	}
 	
 	// Set status of UART/USART
 	for(uint8_t i=0; i<number_of_uart; i++){
 		serial_mdw_buffer[i].status = NOT_INITIALIZED;
+		#ifdef ACTIVATE_TIMESTAMP_RECORDING
+		serial_mdw_buffer[i].length_data = 0;
+		#endif
 	}
 	
 }
@@ -115,6 +116,9 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 	// Initialize interface
 	if(serial_mdw_buffer[uart_buffer].status == INITIALIZED || p_usart == (usart_if)logger_uart){
 		SRL_MDW_DEBUGF("Interface already initialized");
+	}
+	else if(serial_mdw_buffer[uart_buffer].status != NOT_INITIALIZED){
+		SRL_MDW_DEBUGF("Interface has encountered some error in the past.");
 	}
 	else if(UART0 == (Uart*)p_usart){
 		sysclk_enable_peripheral_clock(ID_UART0);
@@ -167,7 +171,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		usart_enable_rx(USART0);
 		NVIC_ClearPendingIRQ(USART0_IRQn);
 		NVIC_EnableIRQ(USART0_IRQn);
-		usart_enable_interrupt(USART0, UART_IER_RXRDY);
+		usart_enable_interrupt(USART0, US_IER_RXRDY);
 		serial_mdw_buffer[uart_buffer].status = INITIALIZED;
 		SRL_MDW_DEBUGF("USART0 initialized");
 	}
@@ -177,7 +181,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		usart_enable_rx(USART1);
 		NVIC_ClearPendingIRQ(USART1_IRQn);
 		NVIC_EnableIRQ(USART1_IRQn);
-		usart_enable_interrupt(USART1, UART_IER_RXRDY);
+		usart_enable_interrupt(USART1, US_IER_RXRDY);
 		serial_mdw_buffer[uart_buffer].status = INITIALIZED;
 		SRL_MDW_DEBUGF("USART1 initialized");
 	}
@@ -187,13 +191,13 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		usart_enable_rx(USART2);
 		NVIC_ClearPendingIRQ(USART2_IRQn);
 		NVIC_EnableIRQ(USART2_IRQn);
-		usart_enable_interrupt(USART2, UART_IER_RXRDY);
+		usart_enable_interrupt(USART2, US_IER_RXRDY);
 		serial_mdw_buffer[uart_buffer].status = INITIALIZED;
 		SRL_MDW_DEBUGF("USART2 initialized");
 	}
 	else{
-		SRL_MDW_DEBUGF("Error");
-		serial_mdw_buffer[uart_buffer].status = ERROR;
+		SRL_MDW_DEBUGF("Unknown error while initializing UART");
+		serial_mdw_buffer[uart_buffer].status = INIT_ERROR;
 	}
 
 }
@@ -213,7 +217,7 @@ void serial_mdw_set_logInterface(usart_if p_usart)
 * \return status.
 * ready to send.
 */
-uint8_t serial_mdw_putchar(usart_if p_usart, const uint8_t c)
+uint8_t serial_mdw_send_byte(usart_if p_usart, const uint8_t c)
 {
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 		
@@ -239,7 +243,8 @@ uint8_t serial_mdw_putchar(usart_if p_usart, const uint8_t c)
 *
 * \return None
 */
-uint8_t serial_mdw_sendData(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize){
+uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize)
+{
 		
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 	
@@ -255,343 +260,206 @@ uint8_t serial_mdw_sendData(usart_if p_usart, const uint8_t *p_buff, uint32_t ul
 	}
 	
 	return status;
-			
 }
 	
-void UART0_Handler(void)
+void handle_uart_interrupt(usart_if UART, UART_pointer uart_pointer)
 {
 	uint8_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
 	uint32_t ul_status;
 
-	/* Read USART status. */
-	ul_status = uart_get_status(UART0);
+	// Read UART status.
+	ul_status = uart_get_status((Uart*)UART);
 		
-	/*transmit interrupt rises*/
+	// Transmit interrupt
 	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
-		if (!circ_bbuf_is_empty(&serial_mdw_buffer[UART0_pointer].buffer_tx)) {
-			circ_bbuf_pop(&serial_mdw_buffer[UART0_pointer].buffer_tx, &uc_char);
-			uart_write(UART0, uc_char);
+		if (!circ_bbuf_is_empty(&serial_mdw_buffer[uart_pointer].buffer_tx)) {
+			circ_bbuf_pop(&serial_mdw_buffer[uart_pointer].buffer_tx, &uc_char);
+			uart_write((Uart*)UART, uc_char);
 			}else{
-			uart_disable_interrupt(UART0, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			uart_disable_tx(UART0);
+			// Nothing more to transmit for now, deactivating interrupt
+			uart_disable_interrupt((Uart*)UART, (UART_IER_TXRDY | UART_IER_TXEMPTY));
+			uart_disable_tx((Uart*)UART);
 		}
 	}
-	/*receive interrupt rises*/
+	// Receive interrupt
 	if (ul_status & UART_SR_RXRDY ) {
-		if(circ_bbuf_is_empty(&serial_mdw_buffer[UART0_pointer].buffer_tx))	
-		tmphead = ( UART_buffer_pointers[UART0_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[UART0_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			uart_read(UART0, &uc_char);
-			UART_RxBuf[UART0_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[UART0_pointer][UART_RxHead] = tmphead;
-		}
+		uart_read((Uart*)UART, &uc_char);
+		circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char);
+		/*if(!circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char))
+		{
+			// Check if timestamp has to be acquired
+			#ifdef ACTIVATE_TIMESTAMP_RECORDING
+			serial_mdw_buffer[uart_pointer].length_data += 1;
 
-			
+			if (serial_mdw_buffer[uart_pointer].timestamp == 0)
+			{
+				serial_mdw_buffer[uart_pointer].timestamp = unix_timestamp_ms;
+			}
+			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
+			if(uc_char == char_to_compare_for_timestamp)
+			{
+				timestamp_t timestamp;
+				// put info into struct
+				timestamp.position = serial_mdw_buffer[uart_pointer].buffer_rx.head;
+				timestamp.timestamp = serial_mdw_buffer[uart_pointer].timestamp;
+				timestamp.length = serial_mdw_buffer[uart_pointer].length_data;
+				// push struct into buffer
+				tstp_buf_push(&serial_mdw_buffer[uart_pointer].timestamp_buff, &timestamp);
+				//reset
+				serial_mdw_buffer[uart_pointer].timestamp = 0;
+				serial_mdw_buffer[uart_pointer].length_data = 0;
+
+			}
+			#endif
+		}*/
 	}
+}
+
+void handle_usart_interrupt(usart_if USART, UART_pointer uart_pointer)
+{
+	uint32_t uc_char;
+	uint32_t ul_status;
+	uint8_t temp_char;
+
+	// Read UART status.
+	ul_status = usart_get_status((Usart*)USART);
+	
+	// Transmit interrupt
+	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
+		if (!circ_bbuf_is_empty(&serial_mdw_buffer[uart_pointer].buffer_tx)) {
+			circ_bbuf_pop(&serial_mdw_buffer[uart_pointer].buffer_tx, &temp_char);
+			uc_char = (uint32_t)temp_char;
+			usart_write((Usart*)USART, uc_char);
+			}else{
+			// Nothing more to transmit for now, deactivating interrupt
+			usart_disable_interrupt((Usart*)USART, (US_IER_TXRDY | US_IER_TXEMPTY)); 
+			usart_disable_tx((Usart*)USART);
+		}
+	}
+	// Receive interrupt
+	if (ul_status & US_CSR_RXRDY ) {
+		if(circ_bbuf_is_empty(&serial_mdw_buffer[uart_pointer].buffer_rx)){
+			usart_read((Usart*)USART, &uc_char);
+			circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char);
+			// Check if timestamp has to be acquired
+			#ifdef ACTIVATE_TIMESTAMP_RECORDING
+			serial_mdw_buffer[uart_pointer].length_data += 1;
+
+			if (serial_mdw_buffer[uart_pointer].timestamp == 0)
+			{
+				serial_mdw_buffer[uart_pointer].timestamp = unix_timestamp_ms;
+			}
+			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
+			if(uc_char == char_to_compare_for_timestamp)
+			{
+				timestamp_t timestamp;
+				// put info into struct
+				timestamp.position = serial_mdw_buffer[uart_pointer].buffer_rx.head;
+				timestamp.timestamp = serial_mdw_buffer[uart_pointer].timestamp;
+				timestamp.length = serial_mdw_buffer[uart_pointer].length_data;
+				// push struct into buffer
+				tstp_buf_push(&serial_mdw_buffer[uart_pointer].timestamp_buff, &timestamp);
+				//reset
+				serial_mdw_buffer[uart_pointer].timestamp = 0;
+				serial_mdw_buffer[uart_pointer].length_data = 0;
+
+			}
+			#endif
+		}
+	}
+}
+
+void UART0_Handler(void)
+{
+	handle_uart_interrupt((usart_if)UART0, UART0_pointer);
 }
 	
 void UART1_Handler(void)
 {
-	uint8_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = uart_get_status(UART1);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
-		if ( UART_buffer_pointers[UART1_pointer][UART_TxHead] != UART_buffer_pointers[UART1_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[UART1_pointer][UART_TxTail] + 1) & 0xFF;
-			uart_write(UART1, UART_TxBuf[UART1_pointer][tmptail]);
-			UART_buffer_pointers[UART1_pointer][UART_TxTail] = tmptail;
-			}else{
-			uart_disable_interrupt(UART1, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			uart_disable_tx(UART1);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & UART_SR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[UART1_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[UART1_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			uart_read(UART1, &uc_char);
-			UART_RxBuf[UART1_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[UART1_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_uart_interrupt((usart_if)UART1, UART1_pointer);
 }
 	
 void UART2_Handler(void)
 {
-	uint8_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = uart_get_status(UART2);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
-		if ( UART_buffer_pointers[UART2_pointer][UART_TxHead] != UART_buffer_pointers[UART2_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[UART2_pointer][UART_TxTail] + 1) & 0xFF;
-			uart_write(UART2, UART_TxBuf[UART2_pointer][tmptail]);
-			UART_buffer_pointers[UART2_pointer][UART_TxTail] = tmptail;
-			}else{
-			uart_disable_interrupt(UART2, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			uart_disable_tx(UART2);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & UART_SR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[UART2_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[UART2_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			uart_read(UART2, &uc_char);
-			UART_RxBuf[UART2_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[UART2_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_uart_interrupt((usart_if)UART2, UART2_pointer);
 }
 	
 void UART3_Handler(void)
 {
-	uint8_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = uart_get_status(UART3);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
-		if ( UART_buffer_pointers[UART3_pointer][UART_TxHead] != UART_buffer_pointers[UART3_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[UART3_pointer][UART_TxTail] + 1) & 0xFF;
-			uart_write(UART3, UART_TxBuf[UART3_pointer][tmptail]);
-			UART_buffer_pointers[UART3_pointer][UART_TxTail] = tmptail;
-			}else{
-			uart_disable_interrupt(UART3, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			uart_disable_tx(UART3);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & UART_SR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[UART3_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[UART3_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			uart_read(UART3, &uc_char);
-			UART_RxBuf[UART3_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[UART3_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_uart_interrupt((usart_if)UART3, UART3_pointer);
 }
 	
 void UART4_Handler(void)
 {
-	uint8_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = uart_get_status(UART4);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (UART_IER_TXRDY | UART_IER_TXEMPTY)) {
-		if ( UART_buffer_pointers[UART4_pointer][UART_TxHead] != UART_buffer_pointers[UART4_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[UART4_pointer][UART_TxTail] + 1) & 0xFF;
-			uart_write(UART4, UART_TxBuf[UART4_pointer][tmptail]);
-			UART_buffer_pointers[UART4_pointer][UART_TxTail] = tmptail;
-			}else{
-			uart_disable_interrupt(UART4, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			uart_disable_tx(UART4);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & US_CSR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[UART4_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[UART4_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			uart_read(UART4, &uc_char);
-			UART_RxBuf[UART4_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[UART4_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_uart_interrupt((usart_if)UART4, UART4_pointer);
 }
 	
 void USART0_Handler(void)
 {
-		
-	uint32_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = usart_get_status(USART0);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
-		if ( UART_buffer_pointers[USART0_pointer][UART_TxHead] != UART_buffer_pointers[USART0_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[USART0_pointer][UART_TxTail] + 1) & 0xFF;
-			usart_write(USART0, UART_TxBuf[USART0_pointer][tmptail]);
-			UART_buffer_pointers[USART0_pointer][UART_TxTail] = tmptail;
-			}else{
-			usart_disable_interrupt(USART0, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			usart_disable_tx(USART0);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & US_CSR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[USART0_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[USART0_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			usart_read(USART0, &uc_char);
-			UART_RxBuf[USART0_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[USART0_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_usart_interrupt((usart_if)USART0, USART0_pointer);
 }
 	
 void USART1_Handler(void)
 {
-		
-	uint32_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = usart_get_status(USART1);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
-		if ( UART_buffer_pointers[USART1_pointer][UART_TxHead] != UART_buffer_pointers[USART1_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[USART1_pointer][UART_TxTail] + 1) & 0xFF;
-			usart_write(USART1, UART_TxBuf[USART1_pointer][tmptail]);
-			UART_buffer_pointers[USART1_pointer][UART_TxTail] = tmptail;
-			}else{
-			usart_disable_interrupt(USART1, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			usart_disable_tx(USART1);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & US_CSR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[USART1_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[USART1_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			usart_read(USART1, &uc_char);
-			UART_RxBuf[USART1_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[USART1_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_usart_interrupt((usart_if)USART1, USART1_pointer);
 }
 	
 void USART2_Handler(void)
 {
-		
-	uint32_t uc_char;
-	uint16_t tmphead;
-	uint16_t tmptail;
-	uint32_t ul_status;
-
-	/* Read USART status. */
-	ul_status = usart_get_status(USART2);
-		
-	/*transmit interrupt rises*/
-	if(ul_status & (US_CSR_TXRDY | US_CSR_TXEMPTY)) {
-		if ( UART_buffer_pointers[USART2_pointer][UART_TxHead] != UART_buffer_pointers[USART2_pointer][UART_TxTail]) {
-			tmptail = (UART_buffer_pointers[USART2_pointer][UART_TxTail] + 1) & 0xFF;
-			usart_write(USART2, UART_TxBuf[USART2_pointer][tmptail]);
-			UART_buffer_pointers[USART2_pointer][UART_TxTail] = tmptail;
-			}else{
-			usart_disable_interrupt(USART2, (UART_IER_TXRDY | UART_IER_TXEMPTY));
-			usart_disable_tx(USART2);
-		}
-	}
-	/*receive interrupt rises*/
-	if (ul_status & US_CSR_RXRDY ) {
-			
-		tmphead = ( UART_buffer_pointers[USART2_pointer][UART_RxHead] + 1) & 0xFF;
-			
-		if ( tmphead != UART_buffer_pointers[USART2_pointer][UART_RxTail] ) {
-			// store received data in buffer
-			usart_read(USART2, &uc_char);
-			UART_RxBuf[USART2_pointer][tmphead] = uc_char;
-			// store new index
-			UART_buffer_pointers[USART2_pointer][UART_RxHead] = tmphead;
-		}
-
-			
-	}
+	handle_usart_interrupt((usart_if)USART2, USART2_pointer);
 }
 	
-	
-uint8_t serial_mdw_available(usart_if p_usart)
+uint32_t serial_mdw_available_bytes(usart_if p_usart)
 {
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
-	uint16_t temp = 256 + UART_buffer_pointers[uart_buffer][UART_RxHead] - UART_buffer_pointers[uart_buffer][UART_RxTail];
-	return (uint8_t) (temp & 0xFF);
+	return circ_bbuf_available_bytes_to_read(&serial_mdw_buffer[uart_buffer].buffer_rx);
 }
 	
-uint16_t serial_mdw_readChar(usart_if p_usart)	
+uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data)	
 {
-	uint16_t data;
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
-		
-		
-	if ( UART_buffer_pointers[uart_buffer][UART_RxHead] == UART_buffer_pointers[uart_buffer][UART_RxTail] ) {
-		return 0x0100;   // no data available 
-	}
-
-	// calculate store buffer index
-	uint16_t tmptail = (UART_buffer_pointers[uart_buffer][UART_RxTail] + 1) & 0xFF;
-	UART_buffer_pointers[uart_buffer][UART_RxTail] = tmptail;
-
-	// get data from receive buffer 
-	data = UART_RxBuf[uart_buffer][tmptail];
-
-	return data;
-		
+	return circ_bbuf_pop(&serial_mdw_buffer[uart_buffer].buffer_rx, data);
 }
+
+uint8_t serial_mdw_read_bytes(usart_if p_usart, uint8_t *data, uint32_t ulsize)
+{
+	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+	return circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, ulsize, data);
+}
+#ifdef ACTIVATE_TIMESTAMP_RECORDING
+void serial_mdw_tmstp_available(uint8_t *buffer)
+{
+	for(uint8_t i=0;i<number_of_uart;i++)
+	{
+		if(tstp_available_to_read(&serial_mdw_buffer[i].timestamp_buff))
+		{
+			buffer[i] = true;
+		}
+	}
+}
+uint32_t serial_mdw_tmstp_available_bytes(usart_if p_usart)
+{
+	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+	return tstp_available_to_read(&serial_mdw_buffer[uart_buffer].timestamp_buff);
+}
+uint8_t serial_mdw_tmstp_read(usart_if p_usart, s_serial_mdw_data_timestamp *data_timestamp)
+{
+	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+	timestamp_t timestamp;
+	uint8_t result_pop = tstp_buf_pop(&serial_mdw_buffer[uart_buffer].timestamp_buff, &timestamp);
+	if(result_pop == TB_SUCCESS)
+	{
+		uint8_t *data = (uint8_t *)malloc(sizeof(uint8_t) * timestamp.length); // TODO : handle the free() of data
+
+		result_pop = circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, timestamp.length, data);
+		data_timestamp->data = data;
+		data_timestamp->timestamp = timestamp.timestamp;
+		data_timestamp->length = timestamp.length;
+	}
+	
+	return result_pop;
+}
+#endif
 	
 uint8_t uart_buffer_from_UART(usart_if p_usart){
 		
@@ -621,8 +489,8 @@ uint8_t uart_buffer_from_UART(usart_if p_usart){
 	
 void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *opt){
 	stdio_base = (void *)usart;
-	ptr_put = (int (*)(void volatile*,char))&serial_mdw_putchar;
-	ptr_get = (void (*)(void volatile*,char*))&serial_mdw_readChar;
+	ptr_put = (int (*)(void volatile*,char))&serial_mdw_send_byte;
+	ptr_get = (void (*)(void volatile*,char*))&serial_mdw_read_byte;
 		
 	serial_mdw_init_interface((Usart *)usart,(usart_serial_options_t *)opt);
 		
