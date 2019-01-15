@@ -1139,6 +1139,12 @@
     <Compile Include="src\lib\utils\circular-byte-buffer.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\lib\utils\timestamp-buffer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lib\utils\timestamp-buffer.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\main.c">
       <SubType>compile</SubType>
     </Compile>

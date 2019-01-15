@@ -57,9 +57,16 @@ int main (void)
 	/* Initialize the SAM system. */
 	sysclk_init();
 	board_init();
+	
+	/* Setup SysTick Timer for 1 msec interrupts */
+	if (SysTick_Config(sysclk_get_cpu_hz() / 1000)) {
+		log_error("Error configuring the systick");
+	}
+	
+	serial_mdw_init();
 
 	/* Configure UART for debug message output. */
-	logger_init();
+	logger_init(LOG_DEBUG);
 		
 	log_info("-- UART_USART Library --\r\n");
 	log_info("-- Developed and made by amof 2018--\r\n");		
@@ -75,32 +82,57 @@ int main (void)
 	{
 		// 1. Transmission test
 		// All TX are functional
-// 		serial_mdw_sendData(UART0, "UART0", 5);
-// 		serial_mdw_sendData(UART1, "UART1", 5);
-// 		serial_mdw_sendData(UART2, "UART2", 5);
-// 		serial_mdw_sendData(UART3, "UART3", 5);
-// 		serial_mdw_sendData(UART4, "UART4", 5);
-// 		serial_mdw_sendData(USART0, "USART0", 6);
-// 		serial_mdw_sendData(USART1, "USART1", 6);
-// 		serial_mdw_sendData(USART2, "USART2", 6);
-// 		delay_ms(50);
+ 		/*serial_mdw_send_bytes((usart_if)UART0, (const uint8_t*)"UART0", 5);
+ 		serial_mdw_send_bytes((usart_if)UART1, (const uint8_t*)"UART1", 5);
+ 		serial_mdw_send_bytes((usart_if)UART2, (const uint8_t*)"UART2", 5);
+ 		serial_mdw_send_bytes((usart_if)UART3, (const uint8_t*)"UART3", 5);
+ 		serial_mdw_send_bytes((usart_if)UART4, (const uint8_t*)"UART4", 5);
+ 		serial_mdw_send_bytes((usart_if)USART0, (const uint8_t*)"USART0", 6);
+ 		serial_mdw_send_bytes((usart_if)USART1, (const uint8_t*)"USART1", 6);
+ 		serial_mdw_send_bytes((usart_if)USART2, (const uint8_t*)"USART2", 6);
+ 		delay_ms(50);*/
 		
 		// 2. Reception test
-		// A. All UART and USART are OK
+		// All UART and USART are OK
 		for (uint8_t i = 0; i<number_of_uart; i++)
 		{
-			if(serial_mdw_available(uart_pointers[i])>0){
-				uint8_t received = serial_mdw_readChar(uart_pointers[i]) & 0xFF;
-				uint8_t point_temp = pointers[0];
+			if(serial_mdw_available_bytes(uart_pointers[i])>0){
+				uint8_t received = 0;
+				uint8_t point_temp = pointers[i];
+
+				serial_mdw_read_byte(uart_pointers[i], &received);
+				//log_debug("Received : %u, point_temp %u\r\n", received, point_temp);
 				buffer[i][point_temp] = received;
 				pointers[i] = point_temp + 1;
-				if(point_temp==25){
-					//srl_mdw_debug_buffer(buffer[0], 26);
-					serial_mdw_sendData(uart_pointers[i], buffer[i], 26);
+				if(point_temp==4){
+					//SRL_MDW_DEBUGF(buffer[0], 26);
+					serial_mdw_send_bytes(uart_pointers[i], buffer[i], 4);
 					pointers[i] = 0;
 				}
 			}
 		}
 		
+		// 3. Reception test with timestamp
+// 		for (uint8_t i = 0; i<number_of_uart; i++)
+// 		{
+// 			if(serial_mdw_tmstp_available_bytes(uart_pointers[i])>0){
+// 				s_serial_mdw_data_timestamp data_timestamp;				
+// 				serial_mdw_tmstp_read(uart_pointers[i], &data_timestamp);
+// 				log_debug("Timestamp: %llu", data_timestamp.timestamp);
+// 				log_buffer("", data_timestamp.data, data_timestamp.length);
+// 				serial_mdw_send_bytes(uart_pointers[i], data_timestamp.data, data_timestamp.length);
+// 			}
+// 		}
+// 		
 	}
+}
+
+/**
+ * \brief Handler for System Tick interrupt.
+ *
+ * Process System Tick Event and increments the ul_ms_ticks counter.
+ */
+void SysTick_Handler(void)
+{
+	unix_timestamp_ms++;
 }
