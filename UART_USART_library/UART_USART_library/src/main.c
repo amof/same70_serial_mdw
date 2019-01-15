@@ -97,7 +97,7 @@ int main (void)
 		
 		// 2. Reception test
 		// All UART and USART are OK
-		for (uint8_t i = 0; i<number_of_uart; i++)
+		/*for (uint8_t i = 0; i<number_of_uart; i++)
 		{
 			if(serial_mdw_available_bytes(uart_pointers[i])>0){
 				uint8_t received = 0;
@@ -112,29 +112,20 @@ int main (void)
 					pointers[i] = 0;
 				}
 			}
-		}
+		}*/
 		
 		// 3. Reception test with timestamp
-// 		for (uint8_t i = 0; i<number_of_uart; i++)
-// 		{
-// 			if(serial_mdw_tmstp_available_bytes(uart_pointers[i])>0){
-// 				s_serial_mdw_data_timestamp data_timestamp;				
-// 				serial_mdw_tmstp_read(uart_pointers[i], &data_timestamp);
-// 				log_debug("Timestamp: %llu", data_timestamp.timestamp);
-// 				log_buffer("", data_timestamp.data, data_timestamp.length);
-// 				serial_mdw_send_bytes(uart_pointers[i], data_timestamp.data, data_timestamp.length);
-// 			}
-// 		}
-// 		
+ 		for (uint8_t i = 0; i<number_of_uart; i++)
+ 		{
+	 		if(serial_mdw_tmstp_available_bytes(uart_pointers[i])>0){
+		 		s_serial_mdw_data_timestamp data_timestamp;
+		 		serial_mdw_tmstp_read(uart_pointers[i], &data_timestamp);
+		 		log_debug("Timestamp: %llu\r\n", data_timestamp.timestamp);
+		 		log_buffer("Received:", "\r\n", data_timestamp.data, data_timestamp.length);
+		 		serial_mdw_send_bytes(uart_pointers[i], data_timestamp.data, data_timestamp.length);
+	 		}
+ 		}
+ 		
 	}
 }
 
-/**
- * \brief Handler for System Tick interrupt.
- *
- * Process System Tick Event and increments the ul_ms_ticks counter.
- */
-void SysTick_Handler(void)
-{
-	unix_timestamp_ms++;
-}

@@ -284,8 +284,8 @@ void handle_uart_interrupt(usart_if UART, UART_pointer uart_pointer)
 	// Receive interrupt
 	if (ul_status & UART_SR_RXRDY ) {
 		uart_read((Uart*)UART, &uc_char);
-		circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char);
-		/*if(!circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char))
+
+		if(!circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char))
 		{
 			// Check if timestamp has to be acquired
 			#ifdef ACTIVATE_TIMESTAMP_RECORDING
@@ -311,7 +311,7 @@ void handle_uart_interrupt(usart_if UART, UART_pointer uart_pointer)
 
 			}
 			#endif
-		}*/
+		}
 	}
 }
 
@@ -447,14 +447,14 @@ uint8_t serial_mdw_tmstp_read(usart_if p_usart, s_serial_mdw_data_timestamp *dat
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 	timestamp_t timestamp;
 	uint8_t result_pop = tstp_buf_pop(&serial_mdw_buffer[uart_buffer].timestamp_buff, &timestamp);
+	data_timestamp->timestamp = timestamp.timestamp;
+	data_timestamp->length = timestamp.length;
 	if(result_pop == TB_SUCCESS)
 	{
 		uint8_t *data = (uint8_t *)malloc(sizeof(uint8_t) * timestamp.length); // TODO : handle the free() of data
 
 		result_pop = circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, timestamp.length, data);
 		data_timestamp->data = data;
-		data_timestamp->timestamp = timestamp.timestamp;
-		data_timestamp->length = timestamp.length;
 	}
 	
 	return result_pop;
@@ -510,6 +510,15 @@ void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *o
 	#ifdef __cplusplus
 }
 #endif
+/**
+ * \brief Handler for System Tick interrupt.
+ *
+ * Process System Tick Event and increments the ul_ms_ticks counter.
+ */
+void SysTick_Handler(void)
+{
+	unix_timestamp_ms++;
+}
 /**INDENT-ON**/
 /// @endcond
 

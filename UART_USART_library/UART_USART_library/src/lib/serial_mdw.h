@@ -65,10 +65,10 @@ typedef struct s_serial_mdw_data_timestamp_t
 #define SERIAL_MDW_BUFFER_SIZE 256
 #define SERIAL_MDW_BUFFER_TIMESTAMP_SIZE 20
 
-static const uint8_t char_to_compare_for_timestamp = 69;
+static const uint8_t char_to_compare_for_timestamp = 'E';
 static volatile uint64_t unix_timestamp_ms = 0UL;
 
-//#define ACTIVATE_TIMESTAMP_RECORDING
+#define ACTIVATE_TIMESTAMP_RECORDING
 /*
    ---------------------------------------
    ---------- Debugging options ----------
