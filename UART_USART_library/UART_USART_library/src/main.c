@@ -63,6 +63,9 @@ int main (void)
 		log_error("Error configuring the systick");
 	}
 	
+	NVIC_ClearPendingIRQ(SysTick_IRQn);
+	NVIC_EnableIRQ(SysTick_IRQn);
+	
 	serial_mdw_init();
 
 	/* Configure UART for debug message output. */
@@ -101,12 +104,11 @@ int main (void)
 				uint8_t point_temp = pointers[i];
 
 				serial_mdw_read_byte(uart_pointers[i], &received);
-				//log_debug("Received : %u, point_temp %u\r\n", received, point_temp);
 				buffer[i][point_temp] = received;
 				pointers[i] = point_temp + 1;
-				if(point_temp==4){
-					//SRL_MDW_DEBUGF(buffer[0], 26);
-					serial_mdw_send_bytes(uart_pointers[i], buffer[i], 4);
+				if(pointers[i]==5){
+					log_buffer("Received:", "\r\n",buffer[i], 5);
+					serial_mdw_send_bytes(uart_pointers[i], buffer[i], 5);
 					pointers[i] = 0;
 				}
 			}
