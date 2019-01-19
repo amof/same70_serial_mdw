@@ -69,27 +69,6 @@ static const uint8_t char_to_compare_for_timestamp = 'E';
 static volatile uint64_t unix_timestamp_ms = 0UL;
 
 #define ACTIVATE_TIMESTAMP_RECORDING
-/*
-   ---------------------------------------
-   ---------- Debugging options ----------
-   ---------------------------------------
-*/
-
-//#define SRL_MDW_DEBUG
-
-/* Debug facilities. SRL_MDW_DEBUG must be defined to read output */
-#ifdef SRL_MDW_DEBUG
-#define SRL_MDW_DEBUGF(message) {printf("%s\r\n",message);}
-#else
-#define SRL_MDW_DEBUGF(message)
-#endif
-
-extern volatile void *volatile stdio_base;
-//! Pointer to the external low level write function.
-extern int (*ptr_put)(void volatile*, char);
-
-//! Pointer to the external low level read function.
-extern void (*ptr_get)(void volatile*, char*);
 
 /*
    ---------------------------------------
@@ -98,7 +77,6 @@ extern void (*ptr_get)(void volatile*, char*);
 */
 
 // Init
-extern void serial_mdw_init(void);
 extern void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt) ;
 
 // Send functions
@@ -116,9 +94,5 @@ extern void serial_mdw_tmstp_available(uint8_t *buffer);
 extern uint32_t serial_mdw_tmstp_available_bytes(usart_if p_usart);
 extern uint8_t serial_mdw_tmstp_read(usart_if p_usart, s_serial_mdw_data_timestamp *data_timestamp);
 #endif
-
-// Init logging
-extern void serial_mdw_stdio_init(volatile void *usart, const usart_serial_options_t *opt);
-extern void serial_mdw_set_logInterface(usart_if p_usart);
 
 #endif /* SERIAL_MDW_H_ */
