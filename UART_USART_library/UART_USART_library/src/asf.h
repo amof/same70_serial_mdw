@@ -90,9 +90,6 @@
 // From module: SAME70 XPLD LED support enabled
 #include <led.h>
 
-// From module: Standard serial I/O (stdio) - SAM implementation
-//#include <stdio_serial.h>
-
 // From module: System Clock Control - SAME70 implementation
 #include <sysclk.h>
 
