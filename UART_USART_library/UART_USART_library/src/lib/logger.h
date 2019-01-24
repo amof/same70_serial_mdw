@@ -23,11 +23,11 @@ Based on rxi library: https://github.com/rxi/log.c/
 #include <stdio.h>
 #include <string.h>
 
-#if defined(__SAME70Q21__)
+#if defined(TEST)
+#   include <stdint.h>
+#else
 #   include "compiler.h"
 #	include "../config/conf_board.h"
-#else
-#   include <stdint.h>
 #endif
 
 #if defined(SERIAL_LOG)
