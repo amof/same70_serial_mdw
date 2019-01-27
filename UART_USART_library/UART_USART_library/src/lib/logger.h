@@ -33,7 +33,7 @@ Based on rxi library: https://github.com/rxi/log.c/
 #if defined(SERIAL_LOG)
 #   include "serial_mdw.h"
 #   include "delay.h"
-#else
+#elif !defined (TEST)
 #	warning "Logger not activated"
 #endif
 
@@ -74,7 +74,7 @@ extern void logger_init(log_level_t log_level);
 
 extern void logger_set_log_level(log_level_t log_level);
 
-extern void log_buffer(const char *text, const char *end_text,uint8_t *p_buff, uint8_t buffer_length);
+extern char * log_buffer(uint8_t *p_buff, uint8_t buffer_length);
 
 extern void log_log(log_level_t level, const char *file, uint32_t line, const char *fmt, ...) __attribute__ ((format (gnu_printf, 4, 5)));
 
