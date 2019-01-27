@@ -45,7 +45,8 @@ typedef struct serial_mdw_buffer_t {
 	circ_bbuf_t					buffer_tx;
 	UART_status_definition_t	status;
 	
-	#ifdef ACTIVATE_TIMESTAMP_RECORDING
+	#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
+	UART_timestamp_t			timestamp_activated;
 	timestamp_buf_t				timestamp_buff;
 	uint32_t					length_data;
 	uint64_t					timestamp;
@@ -77,7 +78,7 @@ serial_mdw_buffer_t serial_mdw_buffer[NUMBER_OF_UART] = {0};
 
 /*
    +========================================+
-			Internal functions defintion						
+			Internal functions definition						
    +========================================+
 */
 void handle_uart_interrupt(usart_if UART, UART_pointer_t uart_pointer);
@@ -89,7 +90,7 @@ UART_pointer_t uart_buffer_from_UART(usart_if p_usart);
 				Functions definition						
    +========================================+
 */
-void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt)
+void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt, UART_timestamp_t activate_timestamp)
 {
 	sam_uart_opt_t uart_settings;
 	sam_usart_opt_t usart_settings;
@@ -98,12 +99,19 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 	// Define properties of interface
 	if(serial_mdw_buffer[uart_buffer].status == NOT_INITIALIZED)
 	{	
+		// Deactivate timestamp by default
+		serial_mdw_buffer[uart_buffer].timestamp_activated =TIMESTAMP_NOT_USED;
+		
 		// Creation of the buffers
 		circ_bbuf_create_buffer(&serial_mdw_buffer[uart_buffer].buffer_rx, SERIAL_MDW_BUFFER_SIZE);
 		circ_bbuf_create_buffer(&serial_mdw_buffer[uart_buffer].buffer_tx, SERIAL_MDW_BUFFER_SIZE);
-		#ifdef ACTIVATE_TIMESTAMP_RECORDING
-		tstp_create_buffer(&serial_mdw_buffer[uart_buffer].timestamp_buff, SERIAL_MDW_BUFFER_TIMESTAMP_SIZE);
-		serial_mdw_buffer[uart_buffer].length_data = 0;
+		#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
+		serial_mdw_buffer[uart_buffer].timestamp_activated = activate_timestamp;
+		if(activate_timestamp == TIMESTAMP_USED)
+		{
+			tstp_create_buffer(&serial_mdw_buffer[uart_buffer].timestamp_buff, SERIAL_MDW_BUFFER_TIMESTAMP_SIZE);
+			serial_mdw_buffer[uart_buffer].length_data = 0;
+		}
 		#endif
 		
 		// Enable peripheral clock
@@ -182,6 +190,26 @@ uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t 
 	return status;
 }
 
+uint8_t serial_mdw_available()
+{
+	uint8_t available_in_buffer = 0;
+	for(uint8_t i = 0; i < NUMBER_OF_UART; i++)
+	{
+		if (serial_mdw_buffer[i].timestamp_activated == TIMESTAMP_USED
+		&& tstp_buf_is_empty(&serial_mdw_buffer[i].timestamp_buff) == false)
+		{
+			available_in_buffer |= 1 << i;
+		}
+		if (serial_mdw_buffer[i].timestamp_activated == TIMESTAMP_NOT_USED
+		&& circ_bbuf_is_empty(&serial_mdw_buffer[i].buffer_rx) == false )
+		{
+			available_in_buffer |= 1 << i;
+		}
+	}
+	
+	return available_in_buffer;
+}
+
 uint32_t serial_mdw_available_bytes(usart_if p_usart)
 {
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
@@ -191,47 +219,74 @@ uint32_t serial_mdw_available_bytes(usart_if p_usart)
 uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data)
 {
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
-	return circ_bbuf_pop(&serial_mdw_buffer[uart_buffer].buffer_rx, data);
+	uint8_t success = false;
+	if (serial_mdw_buffer[uart_buffer].timestamp_activated == TIMESTAMP_NOT_USED)
+	{
+		circ_bbuf_pop(&serial_mdw_buffer[uart_buffer].buffer_rx, data);
+		success = true;
+	}
+	return success;
 }
 
 uint8_t serial_mdw_read_bytes(usart_if p_usart, uint8_t *p_buff, uint32_t ulsize)
 {
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
-	return circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, ulsize, p_buff);
-}
-#ifdef ACTIVATE_TIMESTAMP_RECORDING
-void serial_mdw_tmstp_available(uint8_t *buffer)
-{
-	for(uint8_t i=0;i<NUMBER_OF_UART;i++)
+	uint8_t success = false;
+	if (serial_mdw_buffer[uart_buffer].timestamp_activated == TIMESTAMP_NOT_USED)
 	{
-		if(tstp_available_to_read(&serial_mdw_buffer[i].timestamp_buff))
-		{
-			buffer[i] = true;
-		}
+		circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, ulsize, p_buff);
+		success = true;
 	}
+	return success;
 }
-uint32_t serial_mdw_tmstp_available_bytes(usart_if p_usart)
-{
-	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
-	return tstp_available_to_read(&serial_mdw_buffer[uart_buffer].timestamp_buff);
-}
-uint8_t serial_mdw_tmstp_read(usart_if p_usart, serial_mdw_data_timestamp_t *data_timestamp)
-{
-	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
-	timestamp_t timestamp;
-	uint8_t result_pop = tstp_buf_pop(&serial_mdw_buffer[uart_buffer].timestamp_buff, &timestamp);
-	data_timestamp->timestamp = timestamp.timestamp;
-	data_timestamp->length = timestamp.length;
-	if(result_pop == TB_SUCCESS)
-	{
-		uint8_t *data = (uint8_t *)malloc(sizeof(uint8_t) * timestamp.length); // TODO : handle the free() of data
 
-		result_pop = circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, timestamp.length, data);
-		data_timestamp->data = data;
+#if defined(SERIAL_MDW_TIMESTAMP_ACTIVATED)
+uint32_t serial_mdw_timestamp_available(usart_if p_usart)
+{
+	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
+	uint32_t number_of_bytes = 0;
+	
+	if (serial_mdw_buffer[uart_buffer].timestamp_activated == TIMESTAMP_USED)
+	{
+		number_of_bytes = tstp_available_to_read(&serial_mdw_buffer[uart_buffer].timestamp_buff);
+	}else
+	{
+		number_of_bytes = circ_bbuf_available_bytes_to_read(&serial_mdw_buffer[uart_buffer].buffer_rx);
 	}
 	
-	return result_pop;
+	return number_of_bytes;
 }
+uint8_t serial_mdw_timestamp_read(usart_if p_usart, serial_mdw_data_timestamp_t *data_timestamp)
+{
+	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
+	uint8_t result_read = 0;
+	
+	if (serial_mdw_buffer[uart_buffer].timestamp_activated == TIMESTAMP_USED)
+	{
+		timestamp_t timestamp;
+
+		result_read = tstp_buf_pop(&serial_mdw_buffer[uart_buffer].timestamp_buff, &timestamp);
+		data_timestamp->timestamp = timestamp.timestamp;
+		data_timestamp->length = timestamp.length;
+		
+		if(result_read == TB_SUCCESS)
+		{
+			uint8_t *data = (uint8_t *)malloc(sizeof(uint8_t) * timestamp.length);
+			result_read = circ_bbuf_pop_bytes(&serial_mdw_buffer[uart_buffer].buffer_rx, timestamp.length, data);
+			data_timestamp->data = data;
+		}
+	}else
+	{
+		uint8_t *data = (uint8_t *)malloc(sizeof(uint8_t)); // TODO : handle the free() of data, only one byte retrieved
+		result_read = circ_bbuf_pop(&serial_mdw_buffer[uart_buffer].buffer_rx, data);
+		data_timestamp->timestamp = 0;
+		data_timestamp->length = 1;
+		data_timestamp->data = data;
+	}
+
+	return result_read;
+}
+
 #endif
 	
 void handle_uart_interrupt(usart_if UART, UART_pointer_t uart_pointer)
@@ -257,10 +312,10 @@ void handle_uart_interrupt(usart_if UART, UART_pointer_t uart_pointer)
 	if (ul_status & UART_SR_RXRDY ) {
 		uart_read((Uart*)UART, &uc_char);
 
-		if(!circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char))
+		if(!circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char) && serial_mdw_buffer[uart_pointer].timestamp_activated == TIMESTAMP_USED)
 		{
 			// Check if timestamp has to be acquired
-			#ifdef ACTIVATE_TIMESTAMP_RECORDING
+			#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
 			serial_mdw_buffer[uart_pointer].length_data += 1;
 
 			if (serial_mdw_buffer[uart_pointer].timestamp == 0)
@@ -277,10 +332,9 @@ void handle_uart_interrupt(usart_if UART, UART_pointer_t uart_pointer)
 				timestamp.length = serial_mdw_buffer[uart_pointer].length_data;
 				// push struct into buffer
 				tstp_buf_push(&serial_mdw_buffer[uart_pointer].timestamp_buff, &timestamp);
-				//reset
+				// reset
 				serial_mdw_buffer[uart_pointer].timestamp = 0;
 				serial_mdw_buffer[uart_pointer].length_data = 0;
-
 			}
 			#endif
 		}
@@ -314,7 +368,7 @@ void handle_usart_interrupt(usart_if USART, UART_pointer_t uart_pointer)
 			usart_read((Usart*)USART, &uc_char);
 			circ_bbuf_push(&serial_mdw_buffer[uart_pointer].buffer_rx, uc_char);
 			// Check if timestamp has to be acquired
-			#ifdef ACTIVATE_TIMESTAMP_RECORDING
+			#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
 			serial_mdw_buffer[uart_pointer].length_data += 1;
 
 			if (serial_mdw_buffer[uart_pointer].timestamp == 0)
@@ -331,10 +385,9 @@ void handle_usart_interrupt(usart_if USART, UART_pointer_t uart_pointer)
 				timestamp.length = serial_mdw_buffer[uart_pointer].length_data;
 				// push struct into buffer
 				tstp_buf_push(&serial_mdw_buffer[uart_pointer].timestamp_buff, &timestamp);
-				//reset
+				// reset
 				serial_mdw_buffer[uart_pointer].timestamp = 0;
 				serial_mdw_buffer[uart_pointer].length_data = 0;
-
 			}
 			#endif
 		}
