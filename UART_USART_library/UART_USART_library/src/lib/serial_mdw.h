@@ -121,7 +121,7 @@ extern uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, ui
 * @param none
 * @return byte and LSB is UART0, MSB is USART2, mask to be used to determine wich UART/USART has data
 */
-extern uint8_t serial_mdw_available();
+extern uint8_t serial_mdw_available(void);
 /**
 * Return the number of available bytes for the designed UART/USART
 * @param p_usart : UARTx/USARTx

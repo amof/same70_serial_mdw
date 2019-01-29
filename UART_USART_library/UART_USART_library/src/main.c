@@ -32,6 +32,8 @@
 #include "lib/serial_mdw.h"
 #include "lib/logger.h"
 
+#define NUMBER_OF_UART 8
+
 static void configure_uart(void)
 {
 	const usart_serial_options_t serial_option = {
@@ -42,14 +44,14 @@ static void configure_uart(void)
 	};
 	
 	/* Initialize UART/USART interfaces. */
-	serial_mdw_init_interface((usart_if)UART0, &serial_option);
-	serial_mdw_init_interface((usart_if)UART1, &serial_option);
-	serial_mdw_init_interface((usart_if)UART2, &serial_option);
-	serial_mdw_init_interface((usart_if)UART3, &serial_option);
-	serial_mdw_init_interface((usart_if)UART4, &serial_option);
-	serial_mdw_init_interface((usart_if)USART0, &serial_option);
-	serial_mdw_init_interface((usart_if)USART1, &serial_option);
-	serial_mdw_init_interface((usart_if)USART2, &serial_option);	
+	serial_mdw_init_interface((usart_if)UART0, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)UART1, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)UART2, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)UART3, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)UART4, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)USART0, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)USART1, &serial_option, TIMESTAMP_USED);
+	serial_mdw_init_interface((usart_if)USART2, &serial_option, TIMESTAMP_USED);	
 }
 
 int main (void)
@@ -66,8 +68,6 @@ int main (void)
 	NVIC_ClearPendingIRQ(SysTick_IRQn);
 	NVIC_EnableIRQ(SysTick_IRQn);
 	
-	serial_mdw_init();
-
 	/* Configure UART for debug message output. */
 	logger_init(LOG_DEBUG);
 		
@@ -77,9 +77,9 @@ int main (void)
 	/* Configure UART-USART */
 	configure_uart();
 		
-	uint8_t buffer[number_of_uart][255];
-	volatile uint8_t pointers[number_of_uart]={0};
-	const usart_if uart_pointers[number_of_uart] ={(usart_if)UART0, (usart_if)UART1, (usart_if)UART2, (usart_if)UART3, (usart_if)UART4, (usart_if)USART0, (usart_if)USART1, (usart_if)USART2} ;
+	uint8_t buffer[NUMBER_OF_UART][255];
+	volatile uint8_t pointers[NUMBER_OF_UART]={0};
+	const usart_if uart_pointers[NUMBER_OF_UART] ={(usart_if)UART0, (usart_if)UART1, (usart_if)UART2, (usart_if)UART3, (usart_if)UART4, (usart_if)USART0, (usart_if)USART1, (usart_if)USART2} ;
 	
 	while (1)
 	{
@@ -115,13 +115,13 @@ int main (void)
 		}*/
 		
 		// 3. Reception test with timestamp
- 		for (uint8_t i = 0; i<number_of_uart; i++)
+ 		for (uint8_t i = 0; i<NUMBER_OF_UART; i++)
  		{
-	 		if(serial_mdw_tmstp_available_bytes(uart_pointers[i])>0){
-		 		s_serial_mdw_data_timestamp data_timestamp;
-		 		serial_mdw_tmstp_read(uart_pointers[i], &data_timestamp);
-		 		log_debug("Timestamp: %llu\r\n", data_timestamp.timestamp);
-		 		log_buffer("Received:", "\r\n", data_timestamp.data, data_timestamp.length);
+	 		if(serial_mdw_timestamp_available(uart_pointers[i])>0){
+				
+		 		serial_mdw_data_timestamp_t data_timestamp;
+		 		serial_mdw_timestamp_read(uart_pointers[i], &data_timestamp);
+		 		log_debug("(%llu):%s\r\n", data_timestamp.timestamp, log_buffer(data_timestamp.data, data_timestamp.length));
 		 		serial_mdw_send_bytes(uart_pointers[i], data_timestamp.data, data_timestamp.length);
 	 		}
  		}

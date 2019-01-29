@@ -14,7 +14,7 @@ void logger_init(log_level_t log_level)
             .paritytype = US_MR_PAR_NO,
             .stopbits = US_MR_NBSTOP_1_BIT
         };
-        serial_mdw_init_interface(SERIAL_LOG_ID, &serial_option);
+        serial_mdw_init_interface(SERIAL_LOG_ID, &serial_option, TIMESTAMP_USED);
     #endif
 }
 

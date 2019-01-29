@@ -190,7 +190,7 @@ uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t 
 	return status;
 }
 
-uint8_t serial_mdw_available()
+uint8_t serial_mdw_available(void)
 {
 	uint8_t available_in_buffer = 0;
 	for(uint8_t i = 0; i < NUMBER_OF_UART; i++)
