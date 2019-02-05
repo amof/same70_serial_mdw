@@ -47,7 +47,11 @@ typedef enum {LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL} lo
 
 // Define if you want to use a more verbose option
 #define ADVANCED_LOG
-#define LOGGER_MESSAGE_MAX_LENGTH 100
+#if defined(TEST)
+#  define LOGGER_MESSAGE_MAX_LENGTH 100
+#else
+#  define LOGGER_MESSAGE_MAX_LENGTH 255
+#endif
 
 #if defined(SERIAL_LOG)
 // RAPTORS IS UART0

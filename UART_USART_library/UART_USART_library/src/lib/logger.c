@@ -34,8 +34,14 @@ char * log_buffer(uint8_t *p_buff, uint8_t buffer_length)
         length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "%u:", *p_buff);
 		p_buff++;
 	}
-
-	length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "\b>");
+	if(buffer_length > 0)
+	{
+		length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "\b>");
+	}else
+	{
+		length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, ">");
+	}
+	
 	
 	return buffer;
 }
@@ -56,8 +62,22 @@ void log_log(log_level_t level, const char *file, uint32_t line, const char *fmt
 			char output_message[LOGGER_MESSAGE_MAX_LENGTH]={0};
 			int length_advanced_log = 0;
 			length_advanced_log = snprintf(output_message, LOGGER_MESSAGE_MAX_LENGTH, "%-5s %s:%lu: ", level_names[level], file, line,fmt, args);
-			strcat(output_message, buffer);
-			if(length_advanced_log >= 0) length += length_advanced_log;
+
+			// Protection against length being > LOGGER_MESSAGE_MAX_LENGTH
+			if(	length_advanced_log >= 0 && 
+				(length + length_advanced_log <= LOGGER_MESSAGE_MAX_LENGTH))
+			{
+				length += length_advanced_log;
+				strncat(output_message, buffer, length_advanced_log + length);
+			}
+			else if	(length_advanced_log >= 0 && 
+					(length + length_advanced_log > LOGGER_MESSAGE_MAX_LENGTH))
+			{
+				// Restrain the size to LOGGER_MESSAGE_MAX_LENGTH - length preamble + length of data - 3 (indicate that there is more data but can't be displayed)  
+				strncat(output_message, buffer, LOGGER_MESSAGE_MAX_LENGTH - length + length_advanced_log - 3);
+				strncat(output_message, "...", LOGGER_MESSAGE_MAX_LENGTH);
+				length = LOGGER_MESSAGE_MAX_LENGTH;
+			}
 			memcpy(buffer, output_message, length);
 		#endif
 
