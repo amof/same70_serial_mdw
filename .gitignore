@@ -34,3 +34,7 @@ UART_USART_example/UART_USART_example/Debug/
 UART_USART_library/UART_USART_library/Debug/
 THIRDPARTY_LWIP_RAW_BASIC_HTTP_EXAMPLE1/THIRDPARTY_LWIP_RAW_BASIC_HTTP_EXAMPLE1/Debug/
 DS3231M_library/DS3231M_library/Debug/
+DS3231M_library/DS3231M_library/build/
+DS3231M_library/DS3231M_library/vendor/ceedling/
+DS3231M_library/DS3231M_library/ceedling.cmd
+DS3231M_library/DS3231M_library/.vscode/settings.json
