@@ -1,12 +1,19 @@
 #include "DS3231M.h"
 
+#include <stdio.h>
+#include <sysclk.h>
+#include <twihs.h>
+
+#include "../config/conf_board.h"
+#include "logger.h"
+
 const uint8_t DS3231_REGISTER_CONTROL	= 0x0E;
 const uint8_t DS3231_REGISTER_STATUS	= 0x0F;
 
 const uint8_t DS3231_REGISTER_SECONDS	= 0x00;
 const uint8_t DS3231_REGISTER_MINUTES	= 0x01;
 const uint8_t DS3231_REGISTER_HOUR		= 0x02;
-const uint8_t DS3231_REGISTER_DAY		= 0x03;
+const uint8_t DS3231_REGISTER_DAY			= 0x03;
 const uint8_t DS3231_REGISTER_DATE		= 0x04;
 const uint8_t DS3231_REGISTER_MONTH		= 0x05;
 const uint8_t DS3231_REGISTER_YEAR		= 0x06;
@@ -15,23 +22,12 @@ const uint8_t DS3231_REGISTER_YEAR		= 0x06;
 static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
 static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
 
-void DS3231M_init(uint8_t address){
-	
-	const twihs_options_t opt = {
-		.master_clk = sysclk_get_peripheral_hz(),
-		.speed = TWIHS_CLK
-		};
-		
-	if (twihs_master_init(TWIHS0, &opt) != TWIHS_SUCCESS) {
-		puts("-E-\tTWI master initialization failed.\r");
-		// TODO : capture errors
-	}
-	if(twihs_probe(TWIHS0, address) != TWIHS_SUCCESS){
-		// TODO : capture errors
-	}
+uint32_t DS3231M_init(uint8_t address)
+{
+	return twihs_probe(TWIHS0, address);
 }
 
-void DS3231M_setTime(rtc_ds3231m *ds3231m){
+uint32_t DS3231M_setTime(ds3231m_t *ds3231m){
 	
 	uint8_t status_reg = 0;
 	
@@ -42,50 +38,41 @@ void DS3231M_setTime(rtc_ds3231m *ds3231m){
 		bin2bcd(ds3231m->day_of_week),
 		bin2bcd(ds3231m->date),
 		bin2bcd(ds3231m->month),
-		bin2bcd(ds3231m->year - 2000)} ;
+		bin2bcd(ds3231m->year - 2000)
+		} ;
 	
-	twihs_packet_t packet_tx = {
+	// Set the new date/time
+	twihs_packet_t packet = {
 		.chip = ds3231m->address,
 		.addr[0] = DS3231_REGISTER_SECONDS,
 		.addr_length = 1,
 		.buffer = (uint8_t *)buffer,
 		.length = DS3231_REGISTER_DATETIME_LENGTH
 	};
+
+	uint8_t result = twihs_master_write(TWIHS0, &packet);
 	
-	if (twihs_master_write(TWIHS0, &packet_tx) != TWIHS_SUCCESS) {
-		puts("-E-\tTWI master write packet failed.\r");
-		// TODO : capture errors
-	}
+	// Clear OSF bit in status register
+
+	packet.addr[0] = DS3231_REGISTER_STATUS;
+	packet.buffer = &status_reg;
+	packet.length = 1;
+
+	result = twihs_master_read(TWIHS0, &packet);
 	
-	twihs_packet_t packet_rx = {
-		.chip = ds3231m->address,
-		.addr[0] = DS3231_REGISTER_STATUS,
-		.addr_length = 1,
-		.buffer = &status_reg,
-		.length = 1
-	};
-		
-	if (twihs_master_read(TWIHS0, &packet_rx) != TWIHS_SUCCESS) {
-		puts("-E-\tTWI master read packet failed.\r");
-		// TODO : capture errors
-	}
+	status_reg &= ~0x80; // Clear OSF bit
 	
-	status_reg &= ~0x80;
+	packet.addr[0] = DS3231_REGISTER_STATUS;
+	packet.buffer = &status_reg;
+	packet.length = 1;
 	
-	packet_tx.addr[0] = DS3231_REGISTER_STATUS;
-	packet_tx.buffer = &status_reg;
-	packet_tx.length = 1;
+	result = twihs_master_write(TWIHS0, &packet);
 	
-	if (twihs_master_write(TWIHS0, &packet_tx) != TWIHS_SUCCESS) {
-		puts("-E-\tTWI master write packet failed.\r");
-		// TODO : capture errors
-	}
-	
-	
+	return result;
 }
 
-void DS3231M_getTime(rtc_ds3231m *ds3231m){
-	static uint8_t buffer[DS3231_REGISTER_DATETIME_LENGTH] = {0,0,0,0,0,0,0};
+uint32_t DS3231M_getTime(ds3231m_t *ds3231m){
+	static uint8_t buffer[DS3231_REGISTER_DATETIME_LENGTH] = {0};
 	
 	twihs_packet_t packet_rx = {
 		.chip = ds3231m->address,
@@ -94,25 +81,30 @@ void DS3231M_getTime(rtc_ds3231m *ds3231m){
 		.buffer = (uint8_t *)buffer,
 		.length = DS3231_REGISTER_DATETIME_LENGTH
 	};
+
+	uint32_t result = twihs_master_read(TWIHS0, &packet_rx);
+
+	#if defined(TEST)
+	memcpy(buffer, packet_rx.buffer, DS3231_REGISTER_DATETIME_LENGTH);
+	#endif
 	
-	if (twihs_master_read(TWIHS0, &packet_rx) != TWIHS_SUCCESS) {
-		puts("-E-\tTWI master read packet failed.\r");
-		// TODO : capture errors
+	if (result == TWIHS_SUCCESS) 
+	{
+		ds3231m->second = bcd2bin(buffer[DS3231_REGISTER_SECONDS]);
+		ds3231m->minute = bcd2bin(buffer[DS3231_REGISTER_MINUTES]);
+		ds3231m->hour = bcd2bin(buffer[DS3231_REGISTER_HOUR]);
+		ds3231m->day_of_week = bcd2bin(buffer[DS3231_REGISTER_DAY]);
+		ds3231m->date = bcd2bin(buffer[DS3231_REGISTER_DATE]);
+		ds3231m->month = bcd2bin(buffer[DS3231_REGISTER_MONTH]);
+		ds3231m->year = 2000 + bcd2bin(buffer[DS3231_REGISTER_YEAR]);
 	}
-	
-	ds3231m->second = bcd2bin(buffer[DS3231_REGISTER_SECONDS]);
-	ds3231m->minute = bcd2bin(buffer[DS3231_REGISTER_MINUTES]);
-	ds3231m->hour = bcd2bin(buffer[DS3231_REGISTER_HOUR]);
-	ds3231m->day_of_week = bcd2bin(buffer[DS3231_REGISTER_DAY]);
-	ds3231m->date = bcd2bin(buffer[DS3231_REGISTER_DATE]);
-	ds3231m->month = bcd2bin(buffer[DS3231_REGISTER_MONTH]);
-	ds3231m->year = bcd2bin(buffer[DS3231_REGISTER_YEAR]);
-		
+
+	return result;
 }
 
 // 
 
-uint64_t convert_dateTime_to_unixms(rtc_ds3231m *ds3231m){
+uint64_t convert_dateTime_to_unixms(ds3231m_t *ds3231m){
 	uint16_t y;
     uint8_t m;
     uint8_t d;
@@ -150,7 +142,7 @@ uint64_t convert_dateTime_to_unixms(rtc_ds3231m *ds3231m){
   return unix_timestamp;
 }
 
-void convert_unixms_to_dateTime(uint64_t unix_timestamp_ms, rtc_ds3231m *ds3231m){
+void convert_unixms_to_dateTime(uint64_t unix_timestamp_ms, ds3231m_t *ds3231m){
 	uint32_t a;
 	uint32_t b;
 	uint32_t c;
