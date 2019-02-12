@@ -126,11 +126,15 @@ uint32_t DS3231M_get_temperature(ds3231m_t *ds3231m, float *temperature)
 	.length = 1
 	};
 
-	uint8_t result = twihs_master_read(TWIHS0, &packet);
+	uint32_t result = twihs_master_read(TWIHS0, &packet);
+
+	#if defined(TEST)
+	memcpy(&status_reg, packet.buffer, 1);
+	#endif
 	
 	// Check if BSY flag is 0 (no conversion on going)
 	uint8_t bsy_bit = status_reg & (1<<DS3231_MASK_STATUS_BIT);
-		
+
 	if(result == TWIHS_SUCCESS && bsy_bit == 0)
 	{
 			uint8_t buffer[DS3231_REGISTER_TEMPERATURE_LENGTH] = {0};

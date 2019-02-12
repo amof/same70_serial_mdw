@@ -63,7 +63,7 @@ void test_get_time(void)
 void test_get_temperature(void)
 {
     uint8_t buffer_temperature[]= {0x19, 0x40}; // 25.25°
-    uint8_t status_register= 0x80;
+    uint8_t status_register= 0x80; // 0x84 has BSY bit to 1 
 
     twihs_packet_t packet_status = {
     .buffer = &status_register,
@@ -83,10 +83,11 @@ void test_get_temperature(void)
 
     // Execute function
     float temperature = 0;
-    DS3231M_get_temperature(&ds3231m, &temperature);
+    uint32_t result = DS3231M_get_temperature(&ds3231m, &temperature);
 
     // Verify that return was correct
     TEST_ASSERT_EQUAL_FLOAT(25.25, temperature);
+    TEST_ASSERT_EQUAL_UINT32(0, result);
 }
 
 void test_set_time(void)
