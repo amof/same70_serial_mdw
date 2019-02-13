@@ -29,6 +29,13 @@ static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
 
 uint32_t DS3231M_init(ds3231m_t *ds3231m)
 {
+	ds3231m->second = 0;
+	ds3231m->minute = 0;
+	ds3231m->hour = 0;
+	ds3231m->day_of_week = 0;
+	ds3231m->date = 0;
+	ds3231m->month = 0;
+	ds3231m->year = 0;
 	return twihs_probe(TWIHS0, ds3231m->address);
 }
 

@@ -32,6 +32,7 @@ typedef struct ds3231m_t {
    ---------------------------------------
 */
 
+#if !defined(TEST)
 extern uint32_t DS3231M_init(ds3231m_t *ds3231m);
 extern uint32_t DS3231M_set_time(ds3231m_t *ds3231m);
 extern uint32_t DS3231M_get_time(ds3231m_t *ds3231m);
@@ -39,6 +40,15 @@ extern uint32_t DS3231M_get_temperature(ds3231m_t *ds3231m, float *temperature);
 
 extern uint64_t convert_dateTime_to_unixms(ds3231m_t *ds3231m);
 extern void convert_unixms_to_dateTime(uint64_t unix_timestamp_ms, ds3231m_t *ds3231m);
-extern float convert_temperature_unsigned_to_float(uint8_t *buffer);
+
+#elif defined(TEST)
+uint32_t DS3231M_init(ds3231m_t *ds3231m);
+uint32_t DS3231M_set_time(ds3231m_t *ds3231m);
+uint32_t DS3231M_get_time(ds3231m_t *ds3231m);
+uint32_t DS3231M_get_temperature(ds3231m_t *ds3231m, float *temperature);
+uint64_t convert_dateTime_to_unixms(ds3231m_t *ds3231m);
+void convert_unixms_to_dateTime(uint64_t unix_timestamp_ms, ds3231m_t *ds3231m);
+float convert_temperature_unsigned_to_float(uint8_t *buffer);
+#endif
 
 #endif /* DS3231M_H_ */
