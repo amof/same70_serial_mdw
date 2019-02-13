@@ -43,12 +43,12 @@ LICENSE:
    +========================================+
 */
 
+#if defined(TEST)
+#	include <stdint.h>
+#else
+#	include "compiler.h"
+#endif
 
-#include <stdio.h>
-#include "compiler.h"
-#include "sysclk.h"
-#include "uart.h"
-#include "usart.h"
 #include "status_codes.h"
 #include "uart_serial.h"
 #include "utils/circular-byte-buffer.h"

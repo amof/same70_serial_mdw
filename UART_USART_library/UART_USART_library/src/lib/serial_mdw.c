@@ -5,6 +5,9 @@
 */
 #include "serial_mdw.h"
 
+#include <stdio.h>
+#include "sysclk.h"
+
 /// @cond 0
 /**INDENT-OFF**/
 #ifdef __cplusplus
@@ -115,7 +118,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		#endif
 		
 		// Enable peripheral clock
-		sysclk_enable_peripheral_clock(serial_mdw_uart_id_irq[uart_buffer].id);
+		pmc_enable_periph_clk(serial_mdw_uart_id_irq[uart_buffer].id);
 		
 		// Configure UART/USART
 		if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
@@ -141,6 +144,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		}
 		
 		// Enable NVIC interrupts
+		#if !defined(TEST)
 		NVIC_ClearPendingIRQ(serial_mdw_uart_id_irq[uart_buffer].irq);
 		NVIC_EnableIRQ(serial_mdw_uart_id_irq[uart_buffer].irq);
 		// Initialization completed
