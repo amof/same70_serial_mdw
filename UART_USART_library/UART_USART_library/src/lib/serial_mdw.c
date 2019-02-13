@@ -147,6 +147,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 		#if !defined(TEST)
 		NVIC_ClearPendingIRQ(serial_mdw_uart_id_irq[uart_buffer].irq);
 		NVIC_EnableIRQ(serial_mdw_uart_id_irq[uart_buffer].irq);
+		#endif
 		// Initialization completed
 		serial_mdw_buffer[uart_buffer].status = INITIALIZED;
 	}
