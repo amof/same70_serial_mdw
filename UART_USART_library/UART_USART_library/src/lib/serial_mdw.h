@@ -93,6 +93,7 @@ static volatile uint64_t unix_timestamp_ms = 0UL;
    +========================================+
 */
 
+#if !defined (TEST)
 /**
 * Initialize the UART/USART with parameters
 * @param p_usart : UARTx/USARTx
@@ -158,6 +159,22 @@ extern uint32_t serial_mdw_timestamp_available(usart_if p_usart);
 * @return status of the read
 */
 extern uint8_t serial_mdw_timestamp_read(usart_if p_usart, serial_mdw_data_timestamp_t *data_timestamp);
+#endif
+
+// Allow to use CMock to mock this library by removing 'extern' keyword
+#elif defined (TEST)
+void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt, UART_timestamp_t activate_timestamp) ;
+uint8_t serial_mdw_send_byte(usart_if p_usart, const uint8_t data);
+uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize);
+uint8_t serial_mdw_available(void);
+uint32_t serial_mdw_available_bytes(usart_if p_usart);
+uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data);
+uint8_t serial_mdw_read_bytes(usart_if p_usart, uint8_t *p_buff, uint32_t ulsize);
+
+#if defined(SERIAL_MDW_TIMESTAMP_ACTIVATED)
+uint32_t serial_mdw_timestamp_available(usart_if p_usart);
+uint8_t serial_mdw_timestamp_read(usart_if p_usart, serial_mdw_data_timestamp_t *data_timestamp);
+#endif
 #endif
 
 #endif /* SERIAL_MDW_H_ */
