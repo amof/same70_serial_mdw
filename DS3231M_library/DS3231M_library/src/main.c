@@ -42,9 +42,7 @@
  */
 
 #include "asf.h"
-#include "stdio_serial.h"
 #include "conf_board.h"
-#include "led.h"
 #include "lib/DS3231M.h"
 
 /// @cond 0
@@ -103,19 +101,16 @@ static void configure_console(void)
  */
 int main(void)
 {
-	rtc_ds3231m ds3231m_struct;
-	rtc_ds3231m *ds3231m  =  &ds3231m_struct;
-	ds3231m->address = DS3231_DEFAULT_ADDRESS;
-	ds3231m->second = 15;
-	ds3231m->minute = 45;
-	ds3231m->hour = 13;
-	ds3231m->day = 4;
-	ds3231m->date = 1;
-	ds3231m->month = 4;
-	ds3231m->year = 2018;
-	
-	
-	uint32_t i;
+	ds3231m_t ds3231m;
+	ds3231m.address = DS3231_DEFAULT_ADDRESS;
+	ds3231m.second = 15;
+	ds3231m.minute = 45;
+	ds3231m.hour = 13;
+	ds3231m.day_of_week = 4;
+	ds3231m.date = 1;
+	ds3231m.month = 4;
+	ds3231m.year = 2018;
+	float temperature = 0;
 
 	/* Initialize the SAM system */
 	sysclk_init();
@@ -143,22 +138,33 @@ int main(void)
 
 	/* Enable the peripheral clock for TWI */
 	pmc_enable_periph_clk(ID_TWIHS0);
+	
+	const twihs_options_t opt = {
+		.master_clk = sysclk_get_peripheral_hz(),
+		.speed = TWIHS_CLK
+	};
+
+	if (twihs_master_init(TWIHS0, &opt) != TWIHS_SUCCESS)
+	{
+		puts("-E-\tTWI master initialization failed.\r");
+	}
 
 	/* Init DS3231M */
-	DS3231M_init(ds3231m->address);
+	DS3231M_init(&ds3231m);
 	
 	/* Write time */
-	DS3231M_setTime(ds3231m);
+	DS3231M_set_time(&ds3231m);
 	
 	while(1){
 		/* Read Time*/
-		DS3231M_getTime(ds3231m);
-		printf("Date : %u/%u/%u,Time %u:%u:%u\r\n", ds3231m->date, ds3231m->month, ds3231m->year, ds3231m->hour, ds3231m->minute, ds3231m->second);
+		DS3231M_get_time(&ds3231m);
+		printf("%02u/%02u/%02u %02u:%02u:%02u\r\n", ds3231m.date, ds3231m.month, ds3231m.year, ds3231m.hour, ds3231m.minute, ds3231m.second);
+		DS3231M_get_temperature(&ds3231m, &temperature);
+		// To enable float printing:
+		// Go to Project->Settings->ARM/GNU C Compiler->Symbols and remove the assignments for scanf =iscanf and printf =iprintf
+		printf("Temperature: %.2f\r\n", temperature);
 		delay_s(1);
 	}
-	
-	
-
 }
 
 /// @cond 0

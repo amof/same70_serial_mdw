@@ -9,12 +9,12 @@
 
 const uint8_t DS3231_REGISTER_CONTROL			= 0x0E;
 const uint8_t DS3231_REGISTER_STATUS			= 0x0F;
-const uint8_t DS3231_REGISTER_TEMPERATURE	= 0x11;
+const uint8_t DS3231_REGISTER_TEMPERATURE		= 0x11;
 
 const uint8_t DS3231_REGISTER_SECONDS			= 0x00;
 const uint8_t DS3231_REGISTER_MINUTES			= 0x01;
 const uint8_t DS3231_REGISTER_HOUR				= 0x02;
-const uint8_t DS3231_REGISTER_DAY					= 0x03;
+const uint8_t DS3231_REGISTER_DAY				= 0x03;
 const uint8_t DS3231_REGISTER_DATE				= 0x04;
 const uint8_t DS3231_REGISTER_MONTH				= 0x05;
 const uint8_t DS3231_REGISTER_YEAR				= 0x06;
@@ -78,7 +78,6 @@ uint32_t DS3231M_set_time(ds3231m_t *ds3231m)
 		}
 	}
 
-	
 	return result;
 }
 
@@ -149,9 +148,9 @@ uint32_t DS3231M_get_temperature(ds3231m_t *ds3231m, float *temperature)
 			#endif
 
 			*temperature = convert_temperature_unsigned_to_float(buffer);
-	}else
+	}else if(result == TWIHS_SUCCESS)
 	{
-		result = TWIHS_SEND_NACK; // Forcing value to handle case when ds3231m's temperature is not ready
+		result = 8; // Forcing value to handle case when ds3231m's temperature is not ready
 	}
 	
 
