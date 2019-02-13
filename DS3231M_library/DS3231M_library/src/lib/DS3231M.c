@@ -27,6 +27,8 @@ const uint8_t DS3231_REGISTER_YEAR				= 0x06;
 static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
 static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
 
+float convert_temperature_unsigned_to_float(uint8_t *buffer);
+
 uint32_t DS3231M_init(ds3231m_t *ds3231m)
 {
 	ds3231m->second = 0;
