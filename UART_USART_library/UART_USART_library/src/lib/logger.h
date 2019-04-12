@@ -1,19 +1,14 @@
-/*
-							        *******************
-******************************* C HEADER FILE *******************************
-**                           *******************                           **
-**                                                                         **
-** project   : RAPTORS                                                     ** 
-** filename  : logger                                                      **
-** date      : January 11, 2019                                            **
-** author    : Julien Delvaux                                              **
-** licence   : MIT                                                         **
-**                                                                         **
-*****************************************************************************
-Based on rxi library: https://github.com/rxi/log.c/
-
-*/
-
+/** 
+ *  @file
+ *  @defgroup logger Logger library
+ *  @code #include <logger.h> @endcode
+ *  @brief Logger library
+ *         Based on rxi library: https://github.com/rxi/log.c/
+ *         Use macros (log_x) to use this logger.
+ *  @date 2019-03-22
+ *  @author Julien DELVAUX <delvaux.ju@gmail.com>
+ *  @copyright MIT license
+ */
 
 #ifndef LOGGER_H_
 #define LOGGER_H_
@@ -24,15 +19,15 @@ Based on rxi library: https://github.com/rxi/log.c/
 #include <string.h>
 
 #if defined(TEST)
-#   include <stdint.h>
+#	include <stdint.h>
 #else
-#   include "compiler.h"
+#	include "compiler.h"
 #	include "../config/conf_board.h"
 #endif
 
 #if defined(SERIAL_LOG)
-#   include "serial_mdw.h"
-#   include "delay.h"
+#	include "serial_mdw.h"
+#	include "delay.h"
 #elif !defined (TEST)
 #	warning "Logger not activated"
 #endif
@@ -43,14 +38,22 @@ Based on rxi library: https://github.com/rxi/log.c/
    ---------------------------------------
 */
 
-typedef enum {LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL} log_level_t;
+typedef enum {
+   LOG_TRACE, 
+   LOG_DEBUG, 
+   LOG_INFO, 
+   LOG_WARN, 
+   LOG_ERROR, 
+   LOG_FATAL
+} log_level_t;
 
 // Define if you want to use a more verbose option
 #define ADVANCED_LOG
+// Define the buffer length
 #if defined(TEST)
 #  define LOGGER_MESSAGE_MAX_LENGTH 255
 #else
-#  define LOGGER_MESSAGE_MAX_LENGTH 100
+#  define LOGGER_MESSAGE_MAX_LENGTH 200
 #endif
 
 #if defined(SERIAL_LOG)
@@ -58,6 +61,7 @@ typedef enum {LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL} lo
 // SAME70-XPLD is USART1 (use default USB com port)
 #   define SERIAL_LOG_ID	USART1
     const static uint8_t	DELAY_TO_PRINT = 0; // This parameter will influence greatly the behavior of the system because of the delay introduced
+    const static uint32_t	SERIAL_LOG_SPEED = 115200ul;
 #endif
 
 /*

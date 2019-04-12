@@ -49,6 +49,7 @@
 /* Enable ICache and DCache */
 #define CONF_BOARD_ENABLE_CACHE
 
+// Custom defines
 #define SERIAL_LOG
 
 #endif /* CONF_BOARD_H */

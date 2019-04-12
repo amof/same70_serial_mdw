@@ -4,6 +4,11 @@ static log_level_t logger_log_level = LOG_DEBUG;
 static const char *level_names[] = {
 	"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
+/**
+ * @brief Initialize the logger on the interface (depending of the define used)
+ * @ingroup logger
+ * @param[in] log_level Log level to output message
+ */
 void logger_init(log_level_t log_level)
 {
     logger_log_level = log_level;
@@ -14,15 +19,27 @@ void logger_init(log_level_t log_level)
             .paritytype = US_MR_PAR_NO,
             .stopbits = US_MR_NBSTOP_1_BIT
         };
-        serial_mdw_init_interface(SERIAL_LOG_ID, &serial_option, TIMESTAMP_USED);
+        serial_mdw_init_interface(SERIAL_LOG_ID, &serial_option, false);
     #endif
 }
 
+/**
+ * @brief Change the log level
+ * @ingroup logger
+ * @param[in] log_level Log level to output message
+ */
 void logger_set_log_level(log_level_t log_level)
 {
 	logger_log_level = log_level;
 }
 
+/**
+ * @brief Convert a uint8_t buffer into decimal character
+ * @ingroup logger
+ * @param[in] p_buff Pointer to the buffer of data
+ * @param[in] buffer_length Length of the buffer
+ * @return char* String of characters
+ */
 char * log_buffer(uint8_t *p_buff, uint8_t buffer_length)
 {
 	uint8_t length = 0;
@@ -46,6 +63,10 @@ char * log_buffer(uint8_t *p_buff, uint8_t buffer_length)
 	return buffer;
 }
 
+/**
+ * @brief Generate the log message and send it to the interface defined (SERIAL_LOG, CONSOLE_LOG)
+ * 
+ */
 void log_log(log_level_t level, const char *file, uint32_t line, const char *fmt, ...)
 {
 	if (level >= logger_log_level )

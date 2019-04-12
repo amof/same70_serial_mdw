@@ -9,6 +9,8 @@
 #include "mock_usart.h"
 #include "mock_pmc.h"
 
+volatile uint64_t unix_timestamp_ms = 0ul;
+
 void setUp(void)
 {
 
@@ -24,7 +26,7 @@ void test_init(void)
     // Expected
     pmc_enable_periph_clk_ExpectAnyArgsAndReturn(0);
     uart_init_ExpectAnyArgsAndReturn(0);
-    uart_enable_interrupt_ExpectAnyArgs();
+	uart_disable_rx_ExpectAnyArgs();
 
     const usart_serial_options_t serial_option = {
     .baudrate = 115200ul,
@@ -32,5 +34,5 @@ void test_init(void)
     .paritytype = US_MR_PAR_NO,
     .stopbits = US_MR_NBSTOP_1_BIT
 	};
-    serial_mdw_init_interface((usart_if)UART0, &serial_option, TIMESTAMP_USED);
+    serial_mdw_init_interface((usart_if)UART0, &serial_option, TIMESTAMP_USED, false);
 }

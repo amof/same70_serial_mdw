@@ -1,5 +1,7 @@
 #include "circular-byte-buffer.h"
 
+#include "../logger.h"
+
 void circ_bbuf_create_buffer(circ_bbuf_t *buf, const uint32_t size)
 {
     circ_bbuf_t temp_buffer;
