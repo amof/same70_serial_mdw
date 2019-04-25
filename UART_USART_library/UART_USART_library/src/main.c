@@ -35,8 +35,6 @@
 #define NUMBER_OF_UART 8
 volatile uint64_t unix_timestamp_ms = 0ul;
 
-static void mdelay(uint32_t ul_dly_ticks);
-
 static void configure_uart(void)
 {
 	const usart_serial_options_t serial_option = {
@@ -53,16 +51,8 @@ static void configure_uart(void)
 	serial_mdw_init_interface((usart_if)UART3, &serial_option, true);
 	serial_mdw_init_interface((usart_if)UART4, &serial_option, true);
 	serial_mdw_init_interface((usart_if)USART0, &serial_option, true);
-	serial_mdw_init_interface((usart_if)USART1, &serial_option, true);
-	serial_mdw_init_interface((usart_if)USART2, &serial_option, true);
-// 	serial_mdw_init_interface((usart_if)UART0, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)UART1, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)UART2, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)UART3, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)UART4, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)USART0, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)USART1, &serial_option, TIMESTAMP_USED, true);
-// 	serial_mdw_init_interface((usart_if)USART2, &serial_option, TIMESTAMP_USED, true);	
+ 	serial_mdw_init_interface((usart_if)USART1, &serial_option, true);
+ 	serial_mdw_init_interface((usart_if)USART2, &serial_option, true);
 }
 
 int main (void)
@@ -70,8 +60,6 @@ int main (void)
 	/* Initialize the SAM system. */
 	sysclk_init();
 	board_init();
-	ioport_init();
-
 	
 	/* Setup SysTick Timer for 1 msec interrupts */
 	if (SysTick_Config(sysclk_get_cpu_hz() / 1000)) {
@@ -90,16 +78,14 @@ int main (void)
 	
 	/* Configure UART-USART */
 	configure_uart();
-		
+	
 	uint8_t buffer[NUMBER_OF_UART][255];
 	volatile uint8_t pointers[NUMBER_OF_UART]={0};
 	const usart_if uart_pointers[NUMBER_OF_UART] ={(usart_if)UART0, (usart_if)UART1, (usart_if)UART2, (usart_if)UART3, (usart_if)UART4, (usart_if)USART0, (usart_if)USART1, (usart_if)USART2} ;
 	uint8_t temp_buffer[100] = {0};
 	uint8_t number_of_bytes_received = 0;
-	//serial_mdw_data_timestamp_t data_timestamp;
-	
-	ioport_set_pin_dir(PIO_PA2_IDX, IOPORT_DIR_OUTPUT);
-	ioport_set_pin_level(PIO_PA2_IDX, true);
+	serial_mdw_data_timestamp_t data_timestamp;
+
 		
 	while (1)
 	{
@@ -113,38 +99,32 @@ int main (void)
 //  		serial_mdw_send_bytes((usart_if)USART0, (const uint8_t*)"USART0", 6);
 //  		serial_mdw_send_bytes((usart_if)USART1, (const uint8_t*)"USART1", 6);
 //  		serial_mdw_send_bytes((usart_if)USART2, (const uint8_t*)"USART2", 6);
-
-			if(ioport_get_pin_level(PIO_PA2_IDX) == false)
-			{
-				ioport_set_pin_level(PIO_PA2_IDX, true);
-			}
-			else {
-				ioport_set_pin_level(PIO_PA2_IDX, false);
-			}
- 		mdelay(50); // TODO: seems to have problems with delay function
+// 		gpio_toggle_pin(LED0_GPIO);
+// 		delay_ms(50);
 		
 		// 2. Reception test
 		// All UART and USART are OK
 // 		for (uint8_t i = 0; i < NUMBER_OF_UART; i++)
 // 		{
-// 			//number_of_bytes_received = serial_mdw_available_bytes(uart_pointers[i]);
-// 			if(unix_timestamp_ms > 25){
-// 				//serial_mdw_read_bytes(uart_pointers[i], temp_buffer, number_of_bytes_received);
-// 				serial_mdw_send_bytes((usart_if)UART1, (const uint8_t*)"UART1", 5);
-// 				//log_debug("[%u] (%llu) %s\r\n", i, unix_timestamp_ms, log_buffer(temp_buffer, number_of_bytes_received));
+// 			number_of_bytes_received = serial_mdw_available_bytes(uart_pointers[i]);
+// 			if(number_of_bytes_received > 25){
+// 				serial_mdw_read_bytes(uart_pointers[i], temp_buffer, number_of_bytes_received);
+// 				log_debug("[%u] (%llu) %u %s\r\n", i, unix_timestamp_ms, number_of_bytes_received, log_buffer(temp_buffer, number_of_bytes_received));
+// 				serial_mdw_send_bytes(uart_pointers[i], temp_buffer, number_of_bytes_received);
 // 				number_of_bytes_received = 0;
 // 			}
-// 		}
+//		}
 		
 		// 3. Reception test with timestamp
-//  		for (uint8_t i = 0; i<NUMBER_OF_UART; i++)
-//  		{
-// 	 		if(serial_mdw_timestamp_available(uart_pointers[i]) > 0){
-// 		 		serial_mdw_timestamp_read(uart_pointers[i], &data_timestamp);
-// 		 		log_debug("[%u] (%llu):%s\r\n", i, data_timestamp.timestamp, log_buffer(data_timestamp.data, data_timestamp.length));
-// 		 		serial_mdw_send_bytes(uart_pointers[i], data_timestamp.data, data_timestamp.length);
-// 	 		}
-//  		}
+ 		for (uint8_t i = 0; i<NUMBER_OF_UART; i++)
+ 		{
+	 		if(serial_mdw_timestamp_available(uart_pointers[i]) > 0)
+			 {
+		 		serial_mdw_timestamp_read(uart_pointers[i], &data_timestamp);
+		 		log_debug("[%u] (%llu):%s\r\n", i, data_timestamp.timestamp, log_buffer(data_timestamp.data, data_timestamp.length));
+		 		serial_mdw_send_bytes(uart_pointers[i], data_timestamp.data, data_timestamp.length);
+	 		}
+ 		}
  		
 	}
 }
@@ -158,21 +138,6 @@ int main (void)
 void SysTick_Handler(void)
 {
 	unix_timestamp_ms++;
-}
-
-/**
- * \brief Wait for the given number of milliseconds (using the g_ul_ms_ticks
- * generated by the SAM's microcontrollers's system tick).
- *
- * \param ul_dly_ticks  Delay to wait for, in milliseconds.
- */
-// [main_ms_delay]
-static void mdelay(uint32_t ul_dly_ticks)
-{
-	uint32_t ul_cur_ticks;
-
-	ul_cur_ticks = unix_timestamp_ms;
-	while ((unix_timestamp_ms - ul_cur_ticks) < ul_dly_ticks);
 }
 #endif
 
