@@ -99,7 +99,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 {
 	sam_uart_opt_t uart_settings;
 	sam_usart_opt_t usart_settings;
-	uart_buffer = uart_buffer_from_UART(p_usart);
+	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 	
 	// Define properties of interface
 	if(serial_mdw_buffer[uart_buffer].status == NOT_INITIALIZED)
