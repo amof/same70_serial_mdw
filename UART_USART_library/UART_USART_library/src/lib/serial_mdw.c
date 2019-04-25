@@ -78,7 +78,7 @@ serial_mdw_uart_id_irq_t serial_mdw_uart_id_irq[NUMBER_OF_UART] = {
 	{.id = 	ID_USART1,	.irq = USART1_IRQn,	.UART = (usart_if)USART1},
 	{.id = 	ID_USART2,	.irq = USART2_IRQn,	.UART = (usart_if)USART2}
 };
-serial_mdw_buffer_t serial_mdw_buffer[NUMBER_OF_UART] = {0};
+serial_mdw_buffer_t serial_mdw_buffer[NUMBER_OF_UART];
 static uint8_t char_to_compare_for_timestamp = 'Z';
 
 /*
@@ -89,7 +89,7 @@ static uint8_t char_to_compare_for_timestamp = 'Z';
 void handle_uart_interrupt(usart_if UART, UART_pointer_t uart_pointer);
 void handle_usart_interrupt(usart_if UART, UART_pointer_t uart_pointer);
 UART_pointer_t uart_buffer_from_UART(usart_if p_usart);
-	
+
 /*
    +========================================+
 			Functions definition						
@@ -99,7 +99,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 {
 	sam_uart_opt_t uart_settings;
 	sam_usart_opt_t usart_settings;
-	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
+	uart_buffer = uart_buffer_from_UART(p_usart);
 	
 	// Define properties of interface
 	if(serial_mdw_buffer[uart_buffer].status == NOT_INITIALIZED)
@@ -133,7 +133,7 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 			usart_settings.parity_type = opt->paritytype;
 			usart_settings.stop_bits= opt->stopbits;
 			usart_settings.channel_mode= US_MR_CHMODE_NORMAL;
-			
+			usart_reset((Usart*)p_usart);
 			usart_init_rs232((Usart*)p_usart, &usart_settings, sysclk_get_peripheral_hz());
 		}
 		// Activate RX IRq if asked
@@ -164,7 +164,7 @@ void serial_mdw_enable_usart_rx_irq(usart_if p_usart)
 		uart_enable_rx((Uart*)p_usart);
 		uart_enable_interrupt((Uart*)p_usart, UART_IER_RXRDY);
 	}
-	else if(USART0 == (Usart*)p_usart || USART1 == (Usart*)p_usart || USART2 == (Usart*)p_usart ){
+	else if(USART0 == (Usart*)p_usart || USART1 == (Usart*)p_usart  || USART2 == (Usart*)p_usart ){
 		usart_enable_rx((Usart*)p_usart);
 		usart_enable_interrupt((Usart*)p_usart, US_IER_RXRDY);
 	}
@@ -593,9 +593,10 @@ void USART0_Handler(void)
 	}
 	// Receive interrupt
 	if (ul_status & US_CSR_RXRDY ) {
-		if(circ_bbuf_is_empty(&serial_mdw_buffer[USART0_pointer].buffer_rx)){
-			usart_read(USART0, &uc_char);
-			circ_bbuf_push(&serial_mdw_buffer[USART0_pointer].buffer_rx, uc_char);
+		usart_read(USART0, &uc_char);
+		
+		if(!circ_bbuf_push(&serial_mdw_buffer[USART0_pointer].buffer_rx, uc_char))
+		{
 			// Check if timestamp has to be acquired
 			#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
 			serial_mdw_buffer[USART0_pointer].length_data += 1;
@@ -648,9 +649,10 @@ void USART1_Handler(void)
 	}
 	// Receive interrupt
 	if (ul_status & US_CSR_RXRDY ) {
-		if(circ_bbuf_is_empty(&serial_mdw_buffer[USART1_pointer].buffer_rx)){
-			usart_read(USART1, &uc_char);
-			circ_bbuf_push(&serial_mdw_buffer[USART1_pointer].buffer_rx, uc_char);
+		usart_read(USART1, &uc_char);
+		
+		if(!circ_bbuf_push(&serial_mdw_buffer[USART1_pointer].buffer_rx, uc_char))
+		{
 			// Check if timestamp has to be acquired
 			#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
 			serial_mdw_buffer[USART1_pointer].length_data += 1;
@@ -703,9 +705,10 @@ void USART2_Handler(void)
 	}
 	// Receive interrupt
 	if (ul_status & US_CSR_RXRDY ) {
-		if(circ_bbuf_is_empty(&serial_mdw_buffer[USART2_pointer].buffer_rx)){
-			usart_read(USART2, &uc_char);
-			circ_bbuf_push(&serial_mdw_buffer[USART2_pointer].buffer_rx, uc_char);
+		usart_read(USART2, &uc_char);
+		
+		if(!circ_bbuf_push(&serial_mdw_buffer[USART2_pointer].buffer_rx, uc_char))
+		{
 			// Check if timestamp has to be acquired
 			#ifdef SERIAL_MDW_TIMESTAMP_ACTIVATED
 			serial_mdw_buffer[USART2_pointer].length_data += 1;
