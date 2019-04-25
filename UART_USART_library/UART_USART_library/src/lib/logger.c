@@ -3,6 +3,7 @@
 static log_level_t logger_log_level = LOG_DEBUG;
 static const char *level_names[] = {
 	"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+char *buffer;
 
 /**
  * @brief Initialize the logger on the interface (depending of the define used)
@@ -12,14 +13,15 @@ static const char *level_names[] = {
 void logger_init(log_level_t log_level)
 {
     logger_log_level = log_level;
+	buffer = (char*) malloc(LOGGER_MESSAGE_MAX_LENGTH * sizeof(char));
     #if defined(SERIAL_LOG)
         const usart_serial_options_t serial_option = {
-            .baudrate = 115200ul,
+            .baudrate = SERIAL_LOG_SPEED,
             .charlength = US_MR_CHRL_8_BIT,
             .paritytype = US_MR_PAR_NO,
             .stopbits = US_MR_NBSTOP_1_BIT
         };
-        serial_mdw_init_interface(SERIAL_LOG_ID, &serial_option, false);
+        serial_mdw_init_interface(SERIAL_LOG_ID, &serial_option, true);
     #endif
 }
 
@@ -43,7 +45,6 @@ void logger_set_log_level(log_level_t log_level)
 char * log_buffer(uint8_t *p_buff, uint8_t buffer_length)
 {
 	uint8_t length = 0;
-    char *buffer = (char*) malloc(LOGGER_MESSAGE_MAX_LENGTH * sizeof(char));
 
     length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, "<");
 
@@ -58,7 +59,6 @@ char * log_buffer(uint8_t *p_buff, uint8_t buffer_length)
 	{
 		length += snprintf(buffer + length, LOGGER_MESSAGE_MAX_LENGTH, ">");
 	}
-	
 	
 	return buffer;
 }

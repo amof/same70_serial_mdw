@@ -5,7 +5,7 @@
  *  @brief Logger library
  *         Based on rxi library: https://github.com/rxi/log.c/
  *         Use macros (log_x) to use this logger.
- *  @date 2019-03-22
+ *  @date 2019-04-22
  *  @author Julien DELVAUX <delvaux.ju@gmail.com>
  *  @copyright MIT license
  */
