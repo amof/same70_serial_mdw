@@ -23,11 +23,12 @@ LICENSE:
 ************************************************************************/
 
 /** 
- *  @defgroup Serial Middleware Library
+ *  @file
+ *  @defgroup serial_mdw Serial Middleware Library
  *  @code #include <serial_mdw.h> @endcode
  * 
- *  @brief
- *
+ *  @brief This library provides abstraction for manipulation of serial library provided by Atmel.
+ *	@date 2019-04-25
  *
  *  @author Julien Delvaux <delvaux.ju@gmail.com>
  */
@@ -60,10 +61,11 @@ LICENSE:
    +========================================+
 */
 
+/**Activate the use of timestamp. Creation of the buffer and activation of dedicated functions.*/ 
 #define SERIAL_MDW_TIMESTAMP_ACTIVATED
 
-#define SERIAL_MDW_BUFFER_SIZE 256
-#define SERIAL_MDW_BUFFER_TIMESTAMP_SIZE 20
+#define SERIAL_MDW_BUFFER_SIZE				512
+#define SERIAL_MDW_BUFFER_TIMESTAMP_SIZE	20
 
 typedef enum {
 	TIMESTAMP_USED,
@@ -84,8 +86,7 @@ typedef struct serial_mdw_data_timestamp_t {
    +========================================+
 */
 
-static const uint8_t char_to_compare_for_timestamp = 'E';
-static volatile uint64_t unix_timestamp_ms = 0UL;
+extern volatile uint64_t unix_timestamp_ms;
 
 /*
    +========================================+
@@ -95,75 +96,101 @@ static volatile uint64_t unix_timestamp_ms = 0UL;
 
 #if !defined (TEST)
 /**
-* Initialize the UART/USART with parameters
-* @param p_usart : UARTx/USARTx
-* @param opt : parameters
-* @param activate_timestamp : activate timestamp, only works if SERIAL_MDW_TIMESTAMP_ACTIVATED is defined
-* @return none
+* Initialize the UART/USART with parameters. It does not activate interrupt by default.
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @param opt[in] : parameters
+* @param activate_rx_interrupt[in] : flag to automatically activate rx interruption 
 */
-extern void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt, UART_timestamp_t activate_timestamp) ;
+extern void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt, uint8_t activate_rx_interrupt);
+/**
+* Enable interrupts
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+*/
+extern void serial_mdw_enable_usart_rx_irq(usart_if p_usart);
+/**
+* Disable interrupts
+* @ingroup serial_mdw
+* @param mask p_usart[in] : UARTx/USARTx pointer
+*/
+extern void serial_mdw_disable_usart_rx_irq(usart_if p_usart);
 /**
 * Send a byte through the given UART/USART
-* @param p_usart : UART/USART
-* @param c : byte to send
-* @return none
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @param c[in] : byte to send
 */
 extern uint8_t serial_mdw_send_byte(usart_if p_usart, const uint8_t data);
 /**
 * Send multiples bytes through the given UART/USART
-* @param p_usart : UARTx/USARTx
-* @param p_buff : pointer to the buffer of bytes
-* @param ulsize : size of the buffer of bytes
-* @return none
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @param p_buff[in] : pointer to the buffer of bytes
+* @param ulsize[in] : size of the buffer of bytes
 */
 extern uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize);
 /**
 * Check if UART/USART has some data in it to be read
-* @param none
-* @return byte and LSB is UART0, MSB is USART2, mask to be used to determine wich UART/USART has data
+* @ingroup serial_mdw
+* @return uint8_t : byte and LSB is UART0, MSB is USART2, mask to be used to determine wich UART/USART has data
 */
 extern uint8_t serial_mdw_available(void);
 /**
 * Return the number of available bytes for the designed UART/USART
-* @param p_usart : UARTx/USARTx
-* @return number of bytes that can be read from the buffer
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @return uint32_t : number of bytes that can be read from the buffer
 */
 extern uint32_t serial_mdw_available_bytes(usart_if p_usart);
 /**
 * Read the byte in the given UART/USART
-* @param p_usart : UARTx/USARTx
-* @param data : pointer to the data
-* @return status of the read
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @param data[out] : pointer to the data
+* @return uint8_t : status of the read
 */
 extern uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data);
 /**
 * Read the byte in the given UART/USART
-* @param p_usart : UARTx/USARTx
-* @param p_buff : pointer to the buffer of bytes
-* @param ulsize : size of the buffer of bytes that has to be read
-* @return status of the read
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @param p_buff[in] : pointer to the buffer of bytes
+* @param ulsize[in] : size of the buffer of bytes that has to be read
+* @return uint8_t : status of the read
 */
 extern uint8_t serial_mdw_read_bytes(usart_if p_usart, uint8_t *p_buff, uint32_t ulsize);
 
 #if defined(SERIAL_MDW_TIMESTAMP_ACTIVATED)
 /**
+ * Set the termination character for the p_usart given. Used to raised a flag when data received from serial link is equal to the one given here.
+ * @ingroup serial_mdw
+ * @param p_usart 
+ * @param data 
+ */
+extern void serial_mdw_set_compare_trigger(usart_if p_usart, const uint8_t data);
+/**
 * Return the number of data timestamped for the designed UART/USART
-* @param p_usart : UARTx/USARTx
-* @return number of data that can be read from the buffer
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @return uint32_t : number of data that can be read from the buffer
 */
 extern uint32_t serial_mdw_timestamp_available(usart_if p_usart);
 /**
 * Read the a frame received
-* @param p_usart : UARTx/USARTx
-* @param data_timestamp : pointer to a data_timestamp structure
-* @return status of the read
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @param data_timestamp[out] : pointer to a data_timestamp structure
+* @return uint8_t : status of the read
 */
 extern uint8_t serial_mdw_timestamp_read(usart_if p_usart, serial_mdw_data_timestamp_t *data_timestamp);
 #endif
 
 // Allow to use CMock to mock this library by removing 'extern' keyword
 #elif defined (TEST)
-void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt, UART_timestamp_t activate_timestamp) ;
+void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *opt, uint8_t activate_rx_interrupt) ;
+void serial_mdw_enable_usart_rx_irq(usart_if p_usart);
+void serial_mdw_disable_usart_rx_irq(usart_if p_usart);
 uint8_t serial_mdw_send_byte(usart_if p_usart, const uint8_t data);
 uint8_t serial_mdw_send_bytes(usart_if p_usart, const uint8_t *p_buff, uint32_t ulsize);
 uint8_t serial_mdw_available(void);
