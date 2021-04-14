@@ -52,8 +52,8 @@ LICENSE:
 
 #include "status_codes.h"
 #include "uart_serial.h"
-#include "utils/circular-byte-buffer.h"
-#include "utils/timestamp-buffer.h"
+#include "circular-byte-buffer.h"
+#include "timestamp-buffer.h"
 
 /*
    +========================================+
