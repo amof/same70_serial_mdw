@@ -152,7 +152,7 @@ extern uint32_t serial_mdw_available_bytes(usart_if p_usart);
 */
 extern uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data);
 /**
-* Read the byte in the given UART/USART
+* Read multiple bytes in the given UART/USART
 * @ingroup serial_mdw
 * @param p_usart[in] : UARTx/USARTx pointer
 * @param p_buff[in] : pointer to the buffer of bytes
