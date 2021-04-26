@@ -167,8 +167,6 @@ void serial_mdw_init_interface(usart_if p_usart, const usart_serial_options_t *o
 
 void serial_mdw_enable_usart_rx_irq(usart_if p_usart)
 {
-	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
-	
 	if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
 		uart_enable_rx((Uart*)p_usart);
 		uart_enable_interrupt((Uart*)p_usart, UART_IER_RXRDY);
@@ -181,8 +179,6 @@ void serial_mdw_enable_usart_rx_irq(usart_if p_usart)
 
 void serial_mdw_disable_usart_rx_irq(usart_if p_usart)
 {
-	UART_pointer_t uart_buffer = uart_buffer_from_UART(p_usart);
-	
 	if(UART0 == (Uart*)p_usart || UART1 == (Uart*)p_usart || UART2 == (Uart*)p_usart || UART3 == (Uart*)p_usart || UART4 == (Uart*)p_usart ){
 		uart_disable_rx((Uart*)p_usart);
 		uart_disable_interrupt((Uart*)p_usart, UART_IER_RXRDY);
@@ -349,7 +345,7 @@ void UART0_Handler(void)
 				serial_mdw_buffer[UART0_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[UART0_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[UART0_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[UART0_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -403,7 +399,7 @@ void UART1_Handler(void)
 				serial_mdw_buffer[UART1_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[UART1_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[UART1_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[UART1_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -457,7 +453,7 @@ void UART2_Handler(void)
 				serial_mdw_buffer[UART2_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[UART2_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[UART2_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[UART2_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -511,7 +507,7 @@ void UART3_Handler(void)
 				serial_mdw_buffer[UART3_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[UART3_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[UART3_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[UART3_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -565,7 +561,7 @@ void UART4_Handler(void)
 				serial_mdw_buffer[UART4_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[UART4_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[UART4_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[UART4_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -621,7 +617,7 @@ void USART0_Handler(void)
 				serial_mdw_buffer[USART0_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[USART0_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[USART0_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[USART0_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -677,7 +673,7 @@ void USART1_Handler(void)
 				serial_mdw_buffer[USART1_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[USART1_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[USART1_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[USART1_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
@@ -733,7 +729,7 @@ void USART2_Handler(void)
 				serial_mdw_buffer[USART2_pointer].timestamp = unix_timestamp_ms;
 			}
 			// If character matches, then next character has to be timestamp and can be saved into timestamp buffer
-			if(uc_char == char_to_compare_for_timestamp || circ_bbuf_is_full(&serial_mdw_buffer[USART2_pointer].buffer_rx))
+			if(uc_char == char_to_compare_for_timestamp[USART2_pointer] || circ_bbuf_is_full(&serial_mdw_buffer[USART2_pointer].buffer_rx))
 			{
 				timestamp_t timestamp;
 				// put info into struct
