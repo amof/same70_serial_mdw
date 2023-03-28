@@ -64,7 +64,7 @@ LICENSE:
 /**Activate the use of timestamp. Creation of the buffer and activation of dedicated functions.*/ 
 #define SERIAL_MDW_TIMESTAMP_ACTIVATED
 
-#define SERIAL_MDW_BUFFER_SIZE				512
+#define SERIAL_MDW_BUFFER_SIZE				1036
 #define SERIAL_MDW_BUFFER_TIMESTAMP_SIZE	20
 
 typedef enum {
@@ -86,7 +86,6 @@ typedef struct serial_mdw_data_timestamp_t {
    +========================================+
 */
 
-extern volatile uint64_t unix_timestamp_ms;
 
 /*
    +========================================+
@@ -184,6 +183,13 @@ extern uint32_t serial_mdw_timestamp_available(usart_if p_usart);
 * @return uint8_t : status of the read
 */
 extern uint8_t serial_mdw_timestamp_read(usart_if p_usart, serial_mdw_data_timestamp_t *data_timestamp);
+/**
+* Return the number of data in TX buffer 
+* @ingroup serial_mdw
+* @param p_usart[in] : UARTx/USARTx pointer
+* @return uint32_t : number of data in TX buffer 
+*/
+uint32_t serial_mdw_available_bytes_tx(usart_if p_usart);
 #endif
 
 // Allow to use CMock to mock this library by removing 'extern' keyword

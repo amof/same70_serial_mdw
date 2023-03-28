@@ -90,6 +90,8 @@ static uint8_t char_to_compare_for_timestamp[NUMBER_OF_UART] = {
     0
 };
 
+extern volatile uint64_t unix_timestamp_ms;
+
 /*
    +========================================+
 			Internal functions definition						
@@ -250,6 +252,12 @@ uint32_t serial_mdw_available_bytes(usart_if p_usart)
 {
 	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
 	return circ_bbuf_available_bytes_to_read(&serial_mdw_buffer[uart_buffer].buffer_rx);
+}
+
+uint32_t serial_mdw_available_bytes_tx(usart_if p_usart)
+{
+	uint8_t uart_buffer = uart_buffer_from_UART(p_usart);
+	return circ_bbuf_available_bytes_to_read(&serial_mdw_buffer[uart_buffer].buffer_tx);
 }
 
 uint8_t serial_mdw_read_byte(usart_if p_usart, uint8_t *data)
